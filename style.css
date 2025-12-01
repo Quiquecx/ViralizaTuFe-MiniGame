@@ -1,55 +1,427 @@
-:root{
-  --bg:#0f1720;
-  --panel:#0b1220;
-  --accent:#ff6b6b;
-  --accent-2:#ffd166;
-  --muted:#9aa4b2;
-  --glass: rgba(255,255,255,0.04);
-  --font-game: "Press Start 2P", "Rubik", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-}
-*{box-sizing:border-box}
-html,body,#app{height:100%;margin:0;background:linear-gradient(180deg,#06101a 0%, #0f1720 100%);color:#edf2f7;font-family:var(--font-game);}
-.centered{display:flex;flex-direction:column;align-items:center;justify-content:center}
+/* ======================================================================
+   0. VARIABLES Y RESET
+   ====================================================================== */
 
-/* MEJORA CLAVE: Los elementos con 'hidden' deben ser realmente invisibles e inactivos */
-.hidden{display:none !important; pointer-events: none !important;} 
-
-.visible{display:flex}
-#menu{padding:24px;gap:16px;text-align:center; z-index: 10;} /* Aseguramos que el menú siempre esté en capa 10 */
-#logo{width:140px;height:auto;margin-bottom:8px}
-h1{font-family:"Press Start 2P", monospace;color:var(--accent-2);text-shadow:0 4px 12px rgba(0,0,0,0.6);margin:0}
-.menu-buttons{display:flex;flex-direction:column;gap:10px;margin-top:12px}
-button{cursor:pointer;border:0;padding:12px 18px;border-radius:10px;font-weight:600}
-.primary{background:linear-gradient(90deg,var(--accent),#ff9a9a);color:#071018;box-shadow:0 6px 18px rgba(255,107,107,0.18)}
-.secondary{background:var(--glass);color:var(--muted);border:1px solid rgba(255,255,255,0.04)}
-#game-screen{padding:8px; z-index: 5;} /* La pantalla de juego siempre debe estar detrás de los modales */
-#game-container{position:relative;max-width:1100px;margin:0 auto;display:flex;justify-content:center}
-canvas{background:linear-gradient(180deg,#6dd3ff22,#ffd16611);border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.6);width:100%;height:auto;max-height:80vh}
-#hud{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;max-width:1100px;margin:0 auto}
-#level-label{font-size:14px;color:var(--accent-2)}
-#score{font-size:16px;font-weight:700}
-.modal{position:fixed;inset:0;background:rgba(2,6,23,0.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:9999; pointer-events: auto;} /* Z-index máximo para modales */
-.modal-content{background:linear-gradient(180deg,#071018,#08212a);padding:18px;border-radius:12px;min-width:280px;max-width:700px;color:#e6f7ff;box-shadow:0 8px 30px rgba(0,0,0,0.7); pointer-events: auto;}
-#modal-choices{display:flex;flex-direction:column;gap:8px;margin-top:8px}
-.choice{background:rgba(255,255,255,0.03);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
-.choice.selected{background:linear-gradient(90deg,#6ee7b732,#60a5fa33);border-color:#6ee7b766}
-.timer{font-weight:700;margin-top:8px;color:var(--accent-2)}
-.feedback{margin-top:10px;font-weight:700}
-#final-post{width:100%;height:120px;border-radius:8px;padding:10px;background:#071318;border:1px solid rgba(255,255,255,0.04);color:#fff;resize:vertical}
-#badges{display:flex;gap:8px;margin:10px 0}
-.badge{padding:8px 12px;background:#0b2a2b;border-radius:999px;color:#dff7ee}
-#mobile-controls{position:absolute;left:16px;bottom:16px;display:flex;gap:8px}
-.ctl{width:56px;height:56px;border-radius:12px;background:#0b2a2b;border:1px solid rgba(255,255,255,0.03);font-size:20px}
-footer{position:fixed;bottom:10px;left:0;right:0;text-align:center;font-size:12px;color:var(--muted)}
-@media (max-width:720px){
-  #logo{width:110px}
-  canvas{max-height:60vh}
-  #menu{padding:12px}
-  .menu-buttons{gap:8px}
-  .primary{padding:10px}
-  #mobile-controls{left:8px;bottom:8px}
-}
-
-/* Reglas originales eliminadas para usar la regla .hidden mejorada: */
-/* .modal { z-index: 9999 !important; pointer-events: auto !important; } */
-/* .modal .modal-content { pointer-events: auto; } */
+   :root {
+    --bg: #0f1720;
+    --panel: #0b1220;
+    --accent: #ff6b6b;
+    --accent-2: #ffd166;
+    --muted: #9aa4b2;
+    --glass: rgba(255, 255, 255, 0.04);
+  
+    --font-game: "Press Start 2P", "Rubik", system-ui, sans-serif;
+    --font-social: "Inter", sans-serif;
+  }
+  
+  * {
+    box-sizing: border-box;
+  }
+  
+  html,
+  body,
+  #app {
+    height: 100%;
+    margin: 0;
+    background: linear-gradient(180deg, #06101a 0%, var(--bg) 100%);
+    color: #edf2f7;
+    font-family: var(--font-game);
+  }
+  
+  .centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .hidden {
+    display: none !important;
+    pointer-events: none !important;
+  }
+  
+  .visible {
+    display: flex;
+  }
+  
+  
+  
+  /* ======================================================================
+     1. MENÚ PRINCIPAL
+     ====================================================================== */
+  
+  #menu {
+    padding: 24px;
+    gap: 16px;
+    text-align: center;
+    z-index: 10;
+  }
+  
+  #logo {
+    width: 140px;
+    margin-bottom: 8px;
+  }
+  
+  h1 {
+    font-family: "Press Start 2P", monospace;
+    color: var(--accent-2);
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    margin: 0;
+  }
+  
+  .menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  
+  
+  
+  /* ======================================================================
+     2. BOTONES
+     ====================================================================== */
+  
+  button {
+    cursor: pointer;
+    border: 0;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  
+  .primary {
+    background: linear-gradient(90deg, var(--accent), #ff9a9a);
+    color: #071018;
+    box-shadow: 0 6px 18px rgba(255, 107, 107, 0.18);
+  }
+  
+  .secondary {
+    background: var(--glass);
+    color: var(--muted);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+  }
+  
+  button:active {
+    transform: translateY(2px);
+  }
+  
+  
+  
+  /* ======================================================================
+     3. CANVAS DE JUEGO
+     ====================================================================== */
+  
+  #game-screen {
+    padding: 8px;
+  }
+  
+  #game-container {
+    position: relative;
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+  }
+  
+  canvas {
+    background: linear-gradient(180deg, #6dd3ff22, #ffd16611);
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+    width: 100%;
+    height: auto;
+    max-height: 80vh;
+  }
+  
+  
+  
+  /* ======================================================================
+     4. HUD
+     ====================================================================== */
+  
+  #hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  
+  #level-label {
+    color: var(--accent-2);
+    font-size: 14px;
+  }
+  
+  #score {
+    font-size: 16px;
+    font-weight: 700;
+  }
+  
+  
+  
+  /* ======================================================================
+     5. MODALES GENERALES
+     ====================================================================== */
+  
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 9999;
+  }
+  
+  .modal-content {
+    background: linear-gradient(180deg, #071018, #08212a);
+    padding: 18px;
+    border-radius: 12px;
+    min-width: 280px;
+    max-width: 700px;
+    color: #e6f7ff;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+  }
+  
+  /* SIN fondo cuando está el celular */
+  .phone-frame + .modal-content {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+  
+  .choice {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    cursor: pointer;
+  }
+  
+  .choice.selected {
+    background: linear-gradient(90deg, #6ee7b732, #60a5fa33);
+    border-color: #6ee7b766;
+  }
+  
+  .timer {
+    margin-top: 8px;
+    color: var(--accent-2);
+    font-weight: 700;
+  }
+  
+  #final-post {
+    width: 100%;
+    height: 120px;
+    border-radius: 8px;
+    padding: 10px;
+    background: #071318;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    color: #fff;
+    resize: vertical;
+  }
+  
+  
+  
+  /* ======================================================================
+     6. CONTROLES MÓVILES
+     ====================================================================== */
+  
+  #mobile-controls {
+    position: absolute;
+    left: 16px;
+    bottom: 16px;
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+  }
+  
+  .ctl {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: #0b2a2b;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    font-size: 20px;
+  }
+  
+  
+  
+  /* ======================================================================
+     7. FOOTER
+     ====================================================================== */
+  
+  footer {
+    position: fixed;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  
+  
+  
+  /* ======================================================================
+     8. UI DE CELULAR (REDES SOCIALES)
+     ====================================================================== */
+  
+  .phone-frame {
+    background-image: url("src/Imagenes_L9/Vector_celular.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+  
+    width: 100%;
+    max-width: 350px;
+    height: 700px;
+  
+    padding: 120px 35px 80px;
+  
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  
+    font-family: var(--font-social) !important;
+  }
+  
+  .phone-frame h2 {
+    font-size: 16px;
+  }
+  
+  .phone-frame p,
+  .phone-frame li {
+    font-size: 13px;
+  }
+  
+  .phone-frame button {
+    font-size: 12px !important;
+    padding: 8px 12px;
+  }
+  
+  #modal-choices .choice {
+    font-size: 13px;
+    padding: 8px;
+  }
+  
+  
+  /* HEADER ESTILO HISTORIA */
+  .phone-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .phone-header .username {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  
+  .phone-header .options {
+    font-size: 20px;
+    opacity: 0.9;
+  }
+  
+  
+  /* CONTENIDO */
+  .phone-body {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .phone-body .question {
+    font-size: 13px;
+    font-weight: 500;
+  }
+  
+  .phone-choice {
+    background: #ffffff10;
+    border: 1px solid #ffffff22;
+    padding: 8px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  
+  .phone-choice:hover {
+    background: #ffffff33;
+  }
+  
+  .phone-timer {
+    font-size: 12px;
+    color: #ffdd57;
+    text-align: center;
+    margin-top: 6px;
+  }
+  
+  
+  /* BOTONES */
+  .social-buttons {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+  }
+  
+  .btn-send {
+    background: linear-gradient(90deg, #ff5959, #ff3b3b);
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  
+  .btn-skip {
+    background: #ffffff22;
+    border: 1px solid #ffffff33;
+    padding: 7px 16px;
+    border-radius: 20px;
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  
+  
+  
+  /* ======================================================================
+     9. RESPONSIVE
+     ====================================================================== */
+  
+  @media (max-width: 720px) {
+    #logo {
+      width: 110px;
+    }
+  
+    canvas {
+      max-height: 60vh;
+    }
+  
+    #menu {
+      padding: 12px;
+    }
+  
+    .menu-buttons {
+      gap: 8px;
+    }
+  
+    .primary {
+      padding: 10px;
+    }
+  
+    #mobile-controls {
+      left: 8px;
+      bottom: 8px;
+    }
+  }
+  

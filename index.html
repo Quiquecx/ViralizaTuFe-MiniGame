@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Desafío #ViralizaTuFe</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rubik:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -44,18 +46,25 @@
     </main>
 
     <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
-      <div class="modal-content">
-        <h2 id="modal-title">Pregunta</h2>
-        <p id="modal-question"></p>
-        <div id="modal-choices"></div>
-        <div id="modal-timer" class="timer">30</div>
-        <div class="modal-actions">
-          <button id="submit-answer" class="primary">Enviar</button>
-          <button id="skip-answer" class="secondary">Omitir</button>
+        <div class="modal-content">
+          
+          <div class="phone-frame">
+      
+            <h2 id="modal-title">Pregunta</h2>
+            <p id="modal-question"></p>
+            <div id="modal-choices"></div>
+            <div id="modal-timer" class="timer">30</div>
+            <div class="modal-actions">
+              <button id="submit-answer" class="primary">Enviar</button>
+              <button id="skip-answer" class="secondary">Omitir</button>
+            </div>
+            <div id="modal-feedback" class="feedback"></div>
+      
+          </div>
+      
         </div>
-        <div id="modal-feedback" class="feedback"></div>
       </div>
-    </div>
+      
 
     <div id="final-modal" class="modal hidden">
       <div class="modal-content">
