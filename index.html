@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Desafío #ViralizaTuFe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rubik:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <header id="menu" class="centered visible">
+      <img id="logo" alt="Logo Desafío #ViralizaTuFe" src="src/Imagenes_L9/Vector_celular.png" />
+      <h1>Desafío #ViralizaTuFe</h1>
+      <div class="menu-buttons">
+        <button id="start-game" class="primary">Iniciar Juego</button>
+        <button id="how-to" class="secondary">Cómo jugar</button>
+        <div id="credits">Libro 9 — Proyecto educativo</div>
+      </div>
+    </header>
+
+    <main id="game-screen" class="hidden">
+      <div id="hud">
+        <div id="left-hud">
+          <div id="level-label">Nivel 1</div>
+        </div>
+        <div id="center-hud">
+          <div id="score">Puntos: 0</div>
+        </div>
+        <div id="right-hud">
+          <button id="pause-btn" title="Pausa">⏸</button>
+        </div>
+      </div>
+
+      <div id="game-container">
+        <canvas id="game-canvas" width="900" height="600"></canvas>
+
+        <div id="mobile-controls" class="hidden">
+          <button class="ctl" id="left-btn">◀</button>
+          <button class="ctl" id="right-btn">▶</button>
+          <button class="ctl" id="jump-btn">▲</button>
+        </div>
+      </div>
+    </main>
+
+    <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-content">
+        <h2 id="modal-title">Pregunta</h2>
+        <p id="modal-question"></p>
+        <div id="modal-choices"></div>
+        <div id="modal-timer" class="timer">30</div>
+        <div class="modal-actions">
+          <button id="submit-answer" class="primary">Enviar</button>
+          <button id="skip-answer" class="secondary">Omitir</button>
+        </div>
+        <div id="modal-feedback" class="feedback"></div>
+      </div>
+    </div>
+
+    <div id="final-modal" class="modal hidden">
+      <div class="modal-content">
+        <h2>Reto Final: Tu Post de Misericordia</h2>
+        <p>Escribe tu "Post de Misericordia". Al enviarlo, tu publicación aparecerá en una simulación y ganarás puntos.</p>
+        <textarea id="final-post" placeholder="Escribe tu mensaje..."></textarea>
+        <div class="modal-actions">
+          <button id="submit-post" class="primary">Publicar</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="end-screen" class="modal hidden">
+      <div class="modal-content">
+        <h2>¡Juego completado!</h2>
+        <div id="final-score">Puntos totales: 0</div>
+        <div id="badges"></div>
+        <button id="replay" class="primary">Jugar de nuevo</button>
+      </div>
+    </div>
+
+    <div id="howto-screen" class="modal hidden">
+      <div class="modal-content">
+        <h2>Cómo jugar</h2>
+        <ul>
+          <li>Mueve: flechas / WASD / controles móviles.</li>
+          <li>Toca los destellos (Espíritu Santo) para responder preguntas.</li>
+          <li>Nivel 1: Trivia con 30s por pregunta. Respuestas correctas +10 pts.</li>
+          <li>Al pasar una bandera: +50 pts. Reto final: +30 pts.</li>
+        </ul>
+        <button id="close-howto" class="primary">Cerrar</button>
+      </div>
+    </div>
+
+    <footer id="footer" class="centered">
+      <small>Proyecto educativo · Diseño responsive · Suena mejor con auriculares</small>
+    </footer>
+  </div>
+
+  <script src="src/questions.js"></script>
+  <script src="src/game.js"></script>
+</body>
+</html>
