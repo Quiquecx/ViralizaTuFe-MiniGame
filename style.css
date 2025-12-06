@@ -58,7 +58,7 @@
   }
   
   #logo {
-    width: 140px;
+    width: 180px;
     margin-bottom: 8px;
   }
   
@@ -229,22 +229,77 @@
      6. CONTROLES MÓVILES
      ====================================================================== */
   
+  /* ======================================================================
+   6. CONTROLES MÓVILES (ERGONÓMICOS Y TRANSPARENTES)
+   ====================================================================== */
+
   #mobile-controls {
     position: absolute;
-    left: 16px;
-    bottom: 16px;
+    bottom: 20px; /* Un poco separados del borde inferior */
+    left: 0;
+    width: 100%;
+    height: 0; /* Altura 0 para no bloquear clicks en el centro de la pantalla */
     display: flex;
-    gap: 8px;
-    z-index: 10;
+    justify-content: space-between; /* Empuja los grupos a los extremos */
+    padding: 0 24px; /* Margen lateral para que no estén pegados al borde */
+    z-index: 20;
+    pointer-events: none; /* IMPORTANTE: Permite ver y tocar el juego en el centro */
   }
-  
+
+  /* Grupos de botones (Izquierda y Derecha) */
+  .controls-group {
+    display: flex;
+    gap: 16px; /* Espacio entre botones del mismo grupo */
+    pointer-events: auto; /* Reactiva el tacto solo en los botones */
+    align-items: flex-end; /* Alinea los botones abajo */
+  }
+
+  /* Estilo de los Botones (Efecto Cristal) */
   .ctl {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
-    background: #0b2a2b;
-    border: 1px solid rgba(255, 255, 255, 0.03);
-    font-size: 20px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%; /* Botones redondos son mejores al tacto */
+    
+    /* Efecto Transparente y Borroso */
+    background: rgba(255, 255, 255, 0.15); 
+    backdrop-filter: blur(4px); /* Difumina lo que hay detrás */
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 24px;
+    
+    /* Sombras suaves para visibilidad */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    
+    /* Eliminar estilos por defecto */
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Mejora la respuesta táctil */
+    touch-action: manipulation; 
+    transition: transform 0.1s, background 0.1s;
+  }
+
+  /* Efecto al presionar */
+  .ctl:active {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(0.95);
+  }
+
+  /* Ajustes específicos para pantallas pequeñas */
+  @media (max-width: 720px) {
+    #mobile-controls {
+      bottom: 12px;
+      padding: 0 12px;
+    }
+    
+    .ctl {
+      width: 58px;
+      height: 58px;
+      font-size: 20px;
+    }
   }
   
   

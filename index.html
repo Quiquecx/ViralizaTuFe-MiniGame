@@ -12,12 +12,12 @@
 <body>
   <div id="app">
     <header id="menu" class="centered visible">
-      <img id="logo" alt="Logo Desafío #ViralizaTuFe" src="src/Imagenes_L9/Vector_celular.png" />
+      <img id="logo" alt="Logo Desafío #ViralizaTuFe" src="src/Imagenes_L9/FondoIndex.png" />
       <h1>Desafío #ViralizaTuFe</h1>
       <div class="menu-buttons">
         <button id="start-game" class="primary">Iniciar Juego</button>
         <button id="how-to" class="secondary">Cómo jugar</button>
-        <div id="credits">Libro 9 — Proyecto educativo</div>
+        <div id="credits">Un viaje de conexión divina - 6to grado </div>
       </div>
     </header>
 
@@ -37,10 +37,17 @@
       <div id="game-container">
         <canvas id="game-canvas" width="900" height="600"></canvas>
 
-        <div id="mobile-controls" class="hidden">
-          <button class="ctl" id="left-btn">◀</button>
-          <button class="ctl" id="right-btn">▶</button>
-          <button class="ctl" id="jump-btn">▲</button>
+        <div id="mobile-controls">
+  
+          <div class="controls-group left">
+            <button class="ctl" id="left-btn">◀</button>
+            <button class="ctl" id="right-btn">▶</button>
+          </div>
+        
+          <div class="controls-group right">
+            <button class="ctl" id="jump-btn">▲</button>
+          </div>
+        
         </div>
       </div>
     </main>
@@ -100,7 +107,7 @@
     </div>
 
     <footer id="footer" class="centered">
-      <small>Proyecto educativo · Diseño responsive · Suena mejor con auriculares</small>
+      <small>Itinerario de educacion en la FE · Diseño responsive · Suena mejor con auriculares</small>
     </footer>
   </div>
 

@@ -1,615 +1,741 @@
-// src/game.js - Versión con jugabilidad completa implementada y lógica de rendering fija.
+// src/game.js - Versión con corrección de tamaño de imagen (WORLD_WIDTH = 1280)
 
 (() => {
-    const canvas = document.getElementById('game-canvas');
-    const ctx = canvas.getContext('2d');
-  
-    // UI elems
-    const menu = document.getElementById('menu');
-    const startBtn = document.getElementById('start-game');
-    const howtoBtn = document.getElementById('how-to');
-    const howtoScreen = document.getElementById('howto-screen');
-    const closeHowto = document.getElementById('close-howto'); 
-    const gameScreen = document.getElementById('game-screen');
-    const scoreEl = document.getElementById('score');
-    const levelLabel = document.getElementById('level-label');
-    const pauseBtn = document.getElementById('pause-btn');
-    const modal = document.getElementById('modal');
-    const modalTitle = document.getElementById('modal-title');
-    const modalQuestion = document.getElementById('modal-question');
-    const modalChoices = document.getElementById('modal-choices');
-    const modalTimer = document.getElementById('modal-timer');
-    const modalFeedback = document.getElementById('modal-feedback');
-    const submitAnswerBtn = document.getElementById('submit-answer');
-    const skipAnswerBtn = document.getElementById('skip-answer');
-    const finalModal = document.getElementById('final-modal');
-    const finalPost = document.getElementById('final-post');
-    const submitPostBtn = document.getElementById('submit-post');
-    const endScreen = document.getElementById('end-screen');
-    const finalScoreEl = document.getElementById('final-score');
-    const badgesEl = document.getElementById('badges');
-    const replayBtn = document.getElementById('replay');
+  // 📐 CORRECCIÓN CRÍTICA: Ajustar el ancho del mundo al tamaño de la imagen de fondo.
+  const WORLD_WIDTH = 1280; 
+  const VIEWPORT_WIDTH = 900; 
+
+  const canvas = document.getElementById('game-canvas');
+  const ctx = canvas.getContext('2d');
+
+  // UI elems
+  const menu = document.getElementById('menu');
+  const startBtn = document.getElementById('start-game');
+  const howtoBtn = document.getElementById('how-to');
+  const howtoScreen = document.getElementById('howto-screen');
+  const closeHowto = document.getElementById('close-howto'); 
+  const gameScreen = document.getElementById('game-screen');
+  const scoreEl = document.getElementById('score');
+  const levelLabel = document.getElementById('level-label');
+  const pauseBtn = document.getElementById('pause-btn');
+  const modal = document.getElementById('modal');
+  const modalTitle = document.getElementById('modal-title');
+  const modalQuestion = document.getElementById('modal-question');
+  const modalChoices = document.getElementById('modal-choices');
+  const modalTimer = document.getElementById('modal-timer');
+  const modalFeedback = document.getElementById('modal-feedback');
+  const submitAnswerBtn = document.getElementById('submit-answer');
+  const skipAnswerBtn = document.getElementById('skip-answer');
+  const finalModal = document.getElementById('final-modal');
+  const finalPost = document.getElementById('final-post');
+  const submitPostBtn = document.getElementById('submit-post');
+  const endScreen = document.getElementById('end-screen');
+  const finalScoreEl = document.getElementById('final-score');
+  const badgesEl = document.getElementById('badges');
+  const replayBtn = document.getElementById('replay');
+  const mobileControls = document.getElementById('mobile-controls');
+  const leftBtn = document.getElementById('left-btn');
+  const rightBtn = document.getElementById('right-btn');
+  const jumpBtn = document = document.getElementById('jump-btn');
+
+  // --- AUDIO Y RECURSOS
+  const ASSETS = {
+    // IMAGENES
+    fondo_n1: 'src/Imagenes_L9/libro_9_fondos-01.png',
+    fondo_n2: 'src/Imagenes_L9/libro_9_fondos-02.png',
+    fondo_n3: 'src/Imagenes_L9/libro_9_fondos-03.png',
+    player_front: 'src/Imagenes_L9/Elias_frente.png',
+    player_front_hand: 'src/Imagenes_L9/Elias_frente_mano_levantada.png',
+    player_right: 'src/Imagenes_L9/Elias_perfil_derecho.png',
+    player_left: 'src/Imagenes_L9/Elias_perfll_izquierdo.png', 
+    spirit: 'src/Imagenes_L9/Espiritu_fuego.png',
     
-    const mobileControls = document.getElementById('mobile-controls');
-    const leftBtn = document.getElementById('left-btn');
-    const rightBtn = document.getElementById('right-btn');
-    const jumpBtn = document.getElementById('jump-btn');
-  
-    // --- AUDIO: DESACTIVADO POR DEFECTO 
-    const audio = {
-      jump: null, correct: null, wrong: null, levelComplete: null,
-    };
-  
-    // -- RUTAS DE IMAGENES
-    const ASSETS = {
-      fondo: 'src/Imagenes_L9/Fondo.png',
-      player_front: 'src/Imagenes_L9/Elias_frente.png',
-      player_front_hand: 'src/Imagenes_L9/Elias_frente_mano_levantada.png',
-      player_right: 'src/Imagenes_L9/Elias_perfil_derecho.png',
-      player_left: 'src/Imagenes_L9/Elias_perfll_izquierdo.png', 
-      spirit: 'src/Imagenes_L9/Espiritu_fuego.png',
-      celular: 'src/Imagenes_L9/Vector_celular.png'
-    };
-  
-    const IMAGES = {};
-    let imagesToLoad = Object.keys(ASSETS).length;
-    let imagesLoaded = 0;
-  
-    function preloadImages(onComplete) {
-      imagesLoaded = 0;
-      imagesToLoad = Object.keys(ASSETS).length;
-      Object.entries(ASSETS).forEach(([key, path]) => {
-        const img = new Image();
-        img.src = path;
-        img.onload = () => {
-          IMAGES[key] = img;
-          imagesLoaded++;
-          if (imagesLoaded === imagesToLoad) onComplete();
-        };
-        img.onerror = (e) => {
-          console.warn(`Error cargando imagen ${path}`, e);
-          IMAGES[key] = null;
-          imagesLoaded++;
-          if (imagesLoaded === imagesToLoad) onComplete();
-        };
+    // AUDIO (ASUMIMOS RUTAS MP3)
+    audio_jump: 'src/Audio/jump.mp3', 
+    audio_correct: 'src/Audio/correct.mp3',
+    audio_wrong: 'src/Audio/wrong.mp3',
+    audio_level_complete: 'src/Audio/level_complete.mp3',
+  };
+
+  const IMAGES = {};
+  const AUDIO = {};
+  let resourcesToLoad = Object.keys(ASSETS).length;
+  let resourcesLoaded = 0;
+
+  function loadResource(key, path, type, onComplete) {
+    if (type === 'image') {
+      const img = new Image();
+      img.src = path;
+      img.onload = () => { IMAGES[key] = img; onComplete(); };
+      img.onerror = () => { console.warn(`Error cargando imagen ${path}`); onComplete(); };
+    } else if (type === 'audio') {
+      const audio = new Audio();
+      audio.src = path;
+      audio.addEventListener('canplaythrough', () => { AUDIO[key] = audio; onComplete(); }, { once: true });
+      audio.onerror = () => { console.warn(`Error cargando audio ${path}`); onComplete(); };
+      audio.load();
+    }
+  }
+
+  function preloadResources(onComplete) {
+    resourcesLoaded = 0;
+    Object.entries(ASSETS).forEach(([key, path]) => {
+      const type = path.includes('.mp3') ? 'audio' : 'image';
+      loadResource(key, path, type, () => {
+        resourcesLoaded++;
+        if (resourcesLoaded === resourcesToLoad) onComplete();
       });
-    }
+    });
+  }
   
-    // game state
-    let state = {
-      running: false,
-      paused: false,
-      currentLevel: 0,
-      score: 0,
-      badges: new Set(),
-      currentQuestionIndex: 0, 
-    };
-    
-    // ⚠️ CRÍTICO: Variable global del jugador y para Input/Colisión
-    let player; 
-    let lastTime = 0;
-    let keys = {}; // Estado de teclas presionadas
-    let mobileLeft = false;
-    let mobileRight = false;
-    let mobileJump = false;
-
-    // Función de Detección de Colisión (Axis-Aligned Bounding Box)
-    function aabb(box1, box2) {
-      return box1.x < box2.x + box2.w &&
-             box1.x + box1.w > box2.x &&
-             box1.y < box2.y + box2.h &&
-             box1.y + box1.h > box2.y;
-    }
-  
-    // Player Class 
-    class Player {
-        constructor(x, y) {
-            this.x = x; this.y = y;
-            this.w = 52; this.h = 64;
-            this.vx = 0; this.vy = 0;
-            
-            // 🚀 MODIFICACIÓN 1: Aumentar la velocidad horizontal
-            this.speed = 300; // De 220 a 300
-            
-            // 🚀 MODIFICACIÓN 2: Aumentar la fuerza de salto
-            this.jumpSpeed = -600; // De -460 a -600 (Más negativo = más alto)
-            
-            this.onGround = false;
-            this.facing = 'front';
-        }
-        draw(ctx) {
-            let img = null;
-            if (this.facing === 'left' && IMAGES.player_left) img = IMAGES.player_left;
-            else if (this.facing === 'right' && IMAGES.player_right) img = IMAGES.player_right;
-            else if (this.facing === 'hand' && IMAGES.player_front_hand) img = IMAGES.player_front_hand;
-            else if (IMAGES.player_front) img = IMAGES.player_front;
-      
-            if (img) {
-              ctx.drawImage(img, this.x, this.y, this.w, this.h);
-            } else {
-              ctx.fillStyle = '#ffd166';
-              ctx.fillRect(this.x, this.y, this.w, this.h);
-            }
-        }
-    }
-  
-    // levels (más desafíos por nivel para la trivia)
-    const levels = [
-      {
-        name: "Stories",
-        bgKey: 'fondo',
-        platforms: [
-          {x:0,y:540,w:900,h:60},
-          {x:120,y:440,w:160,h:20},
-          {x:320,y:380,w:160,h:20},
-          {x:560,y:320,w:160,h:20}
-        ],
-        // 5 desafíos de trivia según las preguntas proporcionadas
-        spirits: [
-          {x:150,y:380,w:36,h:36, type: 'trivia', index: 0},
-          {x:360,y:320,w:36,h:36, type: 'trivia', index: 1},
-          {x:590,y:260,w:36,h:36, type: 'trivia', index: 2}, 
-          {x:750,y:400,w:36,h:36, type: 'trivia', index: 3}, 
-          {x:450,y:500,w:36,h:36, type: 'trivia', index: 4}, 
-        ],
-        flag: {x:780,y:240,w:48,h:72}
-      },
-      {
-        name: "Reels",
-        bgKey: 'fondo',
-        platforms: [
-          {x:0,y:540,w:900,h:60},
-          {x:200,y:460,w:160,h:20},
-          {x:420,y:400,w:160,h:20},
-          {x:640,y:340,w:160,h:20}
-        ],
-        spirits: [
-          {x:220,y:420,w:36,h:36, type: 'match', index: 0}, 
-          {x:460,y:360,w:36,h:36, type: 'match', index: 1},
-        ],
-        flag: {x:780,y:260,w:48,h:72}
-      },
-      {
-        name: "Post del Día",
-        bgKey: 'fondo',
-        platforms: [
-          {x:0,y:540,w:900,h:60},
-          {x:100,y:460,w:120,h:20},
-          {x:300,y:420,w:120,h:20},
-          {x:520,y:360,w:120,h:20},
-          {x:680,y:300,w:120,h:20}
-        ],
-        spirits: [
-          {x:120,y:420,w:36,h:36, type: 'action', index: 0}, // alguien triste y Solo
-          {x:320,y:380,w:36,h:36, type: 'action', index: 1}, // Notificación
-          {x:540,y:320,w:36,h:36, type: 'action', index: 2}, // Recoge basura
-        ],
-        flag: {x:820,y:240,w:48,h:72}
+  function playAudio(key) {
+      if (AUDIO[key]) {
+          const clone = AUDIO[key].cloneNode();
+          clone.play().catch(e => console.warn("Audio play error:", e));
       }
-    ];
+  }
 
-    // --- Trivia modal logic (Expandida para manejar todos los tipos de desafíos)
-    let modalTimerInterval = null;
-    let questionsData = [window.GAME_QUESTIONS.level1, window.GAME_QUESTIONS.level2, window.GAME_QUESTIONS.level3];
 
-    function openTrivia(questionObj, levelIndex) {
-      state.paused = true;
-      modal.classList.remove('hidden');
-      modalFeedback.textContent = '';
-      modalTitle.textContent = `Desafío - ${levels[levelIndex].name}`;
-      
-      modalQuestion.textContent = questionObj.question || questionObj.prompt || "Desafío Pendiente";
-      modalChoices.innerHTML = '';
-      let selected = -1;
-      let isActionChallenge = !questionObj.choices;
+  // game state
+  let state = {
+    running: false,
+    paused: false,
+    currentLevel: 0,
+    score: 0,
+    badges: new Set(),
+    currentQuestionIndex: 0, 
+  };
+  
+  // ⚠️ CRÍTICO: Variables globales
+  let player; 
+  let lastTime = 0;
+  let keys = {};
+  let mobileLeft = false;
+  let mobileRight = false;
+  let mobileJump = false;
+  
+  // 🚀 NUEVO: Variables para la cámara y el feedback animado
+  let cameraX = 0; 
+  let feedback = {
+      message: null,
+      timer: 0,
+      type: null // 'correct', 'wrong', o 'level'
+  };
 
-      if (questionObj.choices && Array.isArray(questionObj.choices)) {
-        questionObj.choices.forEach((c, idx) => {
-          const btn = document.createElement('div');
-          btn.className = 'choice';
-          btn.textContent = c;
-          btn.addEventListener('click', ()=> {
-            [...modalChoices.children].forEach(ch => ch.classList.remove('selected'));
-            btn.classList.add('selected');
-            selected = idx;
-          });
-          modalChoices.appendChild(btn);
-        });
-        submitAnswerBtn.textContent = "Enviar";
-        submitAnswerBtn.classList.remove('hidden');
-        skipAnswerBtn.classList.remove('hidden');
-      } else {
-        // Mostrar acción/mensaje para Nivel 3 (Acciones Reflexivas)
-        const p = document.createElement('div');
-        p.textContent = questionObj.text || questionObj.prompt || 'Contenido';
-        p.className = 'choice selected';
-        modalChoices.appendChild(p);
+
+  // Función de Detección de Colisión (Axis-Aligned Bounding Box)
+  function aabb(box1, box2) {
+    return box1.x < box2.x + box2.w &&
+           box1.x + box1.w > box2.x &&
+           box1.y < box2.y + box2.h &&
+           box1.y + box2.h > box2.y;
+  }
+
+  // Player Class 
+  class Player {
+      constructor(x, y) {
+          this.x = x; this.y = y;
+          this.w = 52; this.h = 64;
+          this.vx = 0; this.vy = 0;
+          this.speed = 300; 
+          this.jumpSpeed = -600; 
+          this.onGround = false;
+          this.facing = 'front';
+      }
+      draw(ctx) {
+          let img = null;
+          if (this.facing === 'left' && IMAGES.player_left) img = IMAGES.player_left;
+          else if (this.facing === 'right' && IMAGES.player_right) img = IMAGES.player_right;
+          else if (this.facing === 'hand' && IMAGES.player_front_hand) img = IMAGES.player_front_hand;
+          else if (IMAGES.player_front) img = IMAGES.player_front;
+    
+          if (img) {
+            ctx.drawImage(img, this.x, this.y, this.w, this.h);
+          } else {
+            ctx.fillStyle = '#ffd166';
+            ctx.fillRect(this.x, this.y, this.w, this.h);
+          }
+      }
+  }
+
+  // 🚀 NIVELES AJUSTADOS A WORLD_WIDTH = 1280
+  const levels = [
+    {
+      name: "Stories",
+      bgKey: 'fondo_n1', // Fondo de Nivel 1
+      platforms: [
+        {x:0,y:540,w:WORLD_WIDTH,h:60}, // Plataforma base extendida
+        {x:100,y:440,w:140,h:20},
+        {x:300,y:380,w:140,h:20},
+        {x:500,y:320,w:140,h:20},
+        {x:700,y:440,w:140,h:20}, 
+        {x:900,y:380,w:140,h:20},
+        {x:1100,y:320,w:140,h:20},
+      ],
+      spirits: [
+        {x:130,y:380,w:36,h:36, type: 'trivia', index: 0},
+        {x:340,y:320,w:36,h:36, type: 'trivia', index: 1},
+        {x:530,y:260,w:36,h:36, type: 'trivia', index: 2}, 
+        {x:730,y:380,w:36,h:36, type: 'trivia', index: 3}, 
+        {x:940,y:320,w:36,h:36, type: 'trivia', index: 4}, 
+        // Eliminados 3 spirits para encajar mejor en 1280px. El índice 7 de questions.js no se usa.
+      ],
+      flag: {x:1200,y:468,w:48,h:72} // Bandera más cerca
+    },
+    {
+      name: "Reels",
+      bgKey: 'fondo_n2', // Fondo de Nivel 2: Dilemas (Dones) y Trivia de Símbolos
+      platforms: [
+        {x:0,y:540,w:WORLD_WIDTH,h:60},
+        {x:100,y:460,w:140,h:20}, // Sabiduría
+        {x:280,y:400,w:140,h:20}, // Ciencia
+        {x:460,y:340,w:140,h:20}, // Piedad
+        {x:640,y:480,w:140,h:20}, // Temor de Dios
+        {x:820,y:420,w:140,h:20}, // Inteligencia
+        {x:1000,y:360,w:140,h:20},// Fortaleza
+      ],
+      spirits: [
+        {x:120,y:420,w:36,h:36, type: 'dilemma', index: 0}, 
+        {x:320,y:360,w:36,h:36, type: 'dilemma', index: 1}, 
+        {x:500,y:300,w:36,h:36, type: 'dilemma', index: 2}, 
+        {x:680,y:420,w:36,h:36, type: 'dilemma', index: 3}, 
+        {x:850,y:380,w:36,h:36, type: 'dilemma', index: 4}, 
+        {x:1050,y:320,w:36,h:36, type: 'dilemma', index: 5}, 
+        {x:1200,y:500,w:36,h:36, type: 'dilemma', index: 6}, // Consejo
+        // El último spirit (matching, index 7) se elimina por falta de espacio, o se activa al final del nivel.
+      ],
+      flag: {x:1200,y:468,w:48,h:72}
+    },
+    {
+      name: "Post del Día",
+      bgKey: 'fondo_n3', // Fondo de Nivel 3: Acciones/Reflexión
+      platforms: [
+        {x:0,y:540,w:WORLD_WIDTH,h:60},
+        {x:100,y:460,w:120,h:20},
+        {x:300,y:420,w:120,h:20},
+        {x:520,y:360,w:120,h:20},
+        {x:740,y:300,w:120,h:20},
+        {x:960,y:240,w:120,h:20},
+        {x:1100,y:300,w:120,h:20},
+      ],
+      spirits: [
+        {x:120,y:420,w:36,h:36, type: 'action', index: 0}, // Alguien triste y solo
+        {x:320,y:380,w:36,h:36, type: 'action', index: 1}, // Notificación celular (Mensaje Evangelio)
+        {x:540,y:320,w:36,h:36, type: 'action', index: 2}, // Niños cantando y alegres
+        {x:760,y:260,w:36,h:36, type: 'action', index: 3}, // Mensaje de María
+      ],
+      flag: {x:1200,y:468,w:48,h:72}
+    }
+  ];
+
+  // --- Trivia modal logic
+  let modalTimerInterval = null;
+  let questionsData = [window.GAME_QUESTIONS.level1, window.GAME_QUESTIONS.level2, window.GAME_QUESTIONS.level3];
+  let spiritToRemoveIndex = -1; 
+
+  function displayFeedback(message, type) {
+      feedback.message = message;
+      feedback.type = type; 
+      feedback.timer = (type === 'level') ? 3 : 1.5; 
+  }
+  
+  function closeModal(resultType, pointsAwarded = 0) { 
+    if (modalTimerInterval) { clearInterval(modalTimerInterval); modalTimerInterval = null; }
+    modal.classList.add('hidden');
+    state.paused = false;
+    
+    if (resultType === 'correct' || resultType === 'partial') {
+        state.score += pointsAwarded; 
+        const message = resultType === 'correct' 
+            ? `¡Genial! ¡El Espíritu Santo está contigo! (+${pointsAwarded} Puntos) 🎉`
+            : `¡Bien hecho! (+${pointsAwarded} Puntos) 🎉`;
+        playAudio('audio_correct');
+        displayFeedback(message, 'correct');
+    } else if (resultType === 'wrong') {
+        playAudio('audio_wrong');
+        displayFeedback("¡No te rindas! Escucha a tu corazón. ❤️", 'wrong'); 
+    }
+    
+    // Elimina el spirit
+    if (spiritToRemoveIndex !== -1) {
+        levels[state.currentLevel].spirits.splice(spiritToRemoveIndex, 1);
+        spiritToRemoveIndex = -1;
+    }
+    
+    updateHUD();
+  }
+
+  function openTrivia(questionObj, levelIndex, spiritIndex) {
+    state.paused = true;
+    modal.classList.remove('hidden');
+    modalFeedback.textContent = '';
+    
+    spiritToRemoveIndex = spiritIndex; 
+    
+    const qType = questionObj.type || 'trivia';
+    const isDilemma = qType === 'dilemma';
+    const isAction = qType === 'action';
+    
+    modalTitle.textContent = isAction 
+        ? `Reflexión - ${levels[levelIndex].name}`
+        : `Desafío - ${questionObj.title || levels[levelIndex].name}`;
+    
+    // Lógica para RETO DE ACCIÓN (Nivel 3)
+    if (isAction) {
+        modalQuestion.textContent = questionObj.prompt || 'Reto de Acción';
+        modalChoices.innerHTML = `<div class='choice selected action-message'>${questionObj.message}</div>`;
         submitAnswerBtn.textContent = "¡Entendido!";
         submitAnswerBtn.classList.remove('hidden');
         skipAnswerBtn.classList.add('hidden');
-      }
-  
-      // Configurar temporizador (solo 30s para Nivel 1)
-      let timeLeft = (levelIndex === 0) ? 30 : 9999;
-      modalTimer.textContent = timeLeft;
-      modalTimer.classList.toggle('hidden', levelIndex !== 0);
-
-      if (modalTimerInterval) clearInterval(modalTimerInterval);
-      if (levelIndex === 0) {
-        modalTimerInterval = setInterval(()=> {
-          if (timeLeft > 0) {
-            timeLeft--;
-            modalTimer.textContent = timeLeft;
-          } else {
-            clearInterval(modalTimerInterval);
-            modalFeedback.textContent = "Se acabó el tiempo.";
-            closeModal(false);
-          }
-        }, 1000);
-      }
-  
-      function closeModal(correct) {
-        if (modalTimerInterval) { clearInterval(modalTimerInterval); modalTimerInterval = null; }
-        modal.classList.add('hidden');
-        state.paused = false;
-
-        // Retroalimentación y puntos
-        if (typeof correct === 'boolean') {
-          if (correct) {
-            state.score += 10; 
-            modalFeedback.textContent = "¡Genial! ¡El Espíritu Santo está contigo! 🎉"; 
-          } else {
-            modalFeedback.textContent = "¡No te rindas! Escucha a tu corazón. ❤️"; 
-          }
-        }
-        updateHUD();
-      }
-
-      // Handler de Envío
-      submitAnswerBtn.onclick = () => {
-        if (isActionChallenge) {
-            state.score += 10; // +10 pts por Reto Reflexivo (Nivel 3)
-            closeModal(true);
-        } else if (questionObj.choices && selected >= 0) {
-          const isCorrect = selected === questionObj.correctIndex;
-          closeModal(isCorrect);
-        } else {
-          closeModal(false);
-        }
-      };
-      
-      skipAnswerBtn.onclick = () => { 
-        closeModal(false); 
-      };
-    }
-    
-    function updateHUD(){ 
-        scoreEl.textContent = `Puntos: ${state.score}`; 
-        levelLabel.textContent = `Nivel ${state.currentLevel+1}: ${levels[state.currentLevel].name}`; 
-    }
-  
-    function startLevel(index) {
-        state.currentLevel = index;
-        state.currentQuestionIndex = 0; 
-        // ⚠️ La instancia del jugador se crea aquí
-        player = new Player(40, 460); 
-        lastTime = performance.now();
-        state.paused = false;
-        updateHUD();
-    }
-  
-    function onLevelComplete() {
-      state.score += 50; // +50 pts por completar un nivel
-      
-      const badgeMap = ['🟢 “Follower Confirmado”','🔵 “Espíritu ON”','🟣 “Influencer del Evangelio”'];
-      state.badges.add(badgeMap[state.currentLevel]);
-      
-      if (state.currentLevel < levels.length - 1) {
-        startLevel(state.currentLevel + 1);
-      } else {
-        openFinalChallenge();
-      }
-      updateHUD();
-    }
-  
-    function openFinalChallenge() {
-      finalModal.classList.remove('hidden');
-      state.paused = true;
-      submitPostBtn.onclick = () => {
-        const text = finalPost.value.trim();
-        if (text.length === 0) {
-          alert('Escribe tu post para completar el reto final.');
-          return;
-        }
-        state.score += 30; // +30 pts por Reto Final
-        finalModal.classList.add('hidden');
-        state.paused = false;
-        showEndScreen();
-      };
-    }
-  
-    function showEndScreen() {
-      endScreen.classList.remove('hidden');
-      state.score += 100; // +100 pts por Finalizar todo el juego
-      finalScoreEl.textContent = `Puntos totales: ${state.score}`;
-      
-      badgesEl.innerHTML = '';
-      state.badges.forEach(b => {
-        const span = document.createElement('span');
-        span.className = 'badge';
-        span.textContent = b;
-        badgesEl.appendChild(span);
-      });
-    }
-  
-    // ----------------------------------------------------------------------------------
-    // BU CLE PRINCIPAL DEL JUEGO (Game Loop)
-    // ----------------------------------------------------------------------------------
-    function loop(ts) { 
-        const dt = Math.min(0.05, (ts - lastTime) / 1000);
-        lastTime = ts;
         
-        if (!state.paused && state.running) { 
-            update(dt);
-        }
-        
-        render();
-        
-        // Si el juego está corriendo, solicita el siguiente frame
-        if (state.running) requestAnimationFrame(loop); 
-    }
-    
-    // ----------------------------------------------------------------------------------
-    // LÓGICA DE ACTUALIZACIÓN (Update)
-    // ----------------------------------------------------------------------------------
-    function update(dt) {
-      let moveLeft = keys['ArrowLeft'] || keys['a'] || mobileLeft;
-      let moveRight = keys['ArrowRight'] || keys['d'] || mobileRight;
-      let jump = keys['ArrowUp'] || keys['w'] || keys[' ' ] || mobileJump;
-  
-      if (moveLeft) { player.vx = -player.speed; player.facing = 'left'; }
-      else if (moveRight) { player.vx = player.speed; player.facing = 'right'; }
-      else { player.vx = 0; player.facing = 'front'; }
-  
-      if (jump && player.onGround) {
-        player.vy = player.jumpSpeed;
-        player.onGround = false;
-        player.facing = 'hand';
-      }
-  
-      player.vy += 1500 * dt; // Gravedad
-      player.x += player.vx * dt;
-      player.y += player.vy * dt;
-  
-      // Clamp player position and check for fall
-      if (player.x < 0) player.x = 0;
-      if (player.x + player.w > canvas.width) player.x = canvas.width - player.w;
-      if (player.y > canvas.height) {
-        player.x = 40; player.y = 460; player.vy = 0; // Reinicio al caer
-      }
-  
-      const level = levels[state.currentLevel];
-      player.onGround = false;
-      
-      // Colisión con plataformas
-      // Necesitamos calcular la posición Y anterior del jugador
-      const previousY = player.y - player.vy * dt;
-
-      for (const p of level.platforms) {
-        const plat = {x:p.x,y:p.y,w:p.w,h:p.h};
-        
-        // 1. Verificación de colisión horizontal
-        if (player.x + player.w > plat.x && player.x < plat.x + plat.w) {
-          
-          // 2. Verificación de colisión vertical y dirección
-          // Solo si el jugador está "aterrizando" (borde inferior actual > borde superior plataforma)
-          // Y su borde inferior ANTERIOR era menor o igual al borde superior plataforma.
-          if (player.y + player.h > plat.y && previousY + player.h <= plat.y) {
-            
-            // 3. Resolución de la colisión (ajustar posición y detener velocidad)
-            player.y = plat.y - player.h;
-            player.vy = 0;
-            player.onGround = true;
-            
-          } else if (player.y < plat.y + plat.h && previousY >= plat.y + plat.h) {
-            
-            // Colisión por la parte inferior (golpeando la cabeza contra la plataforma)
-            player.y = plat.y + plat.h;
-            player.vy = 0;
-          }
-        }
-      }
-  
-      // Colisión con spirits (desafíos)
-      for (let i = 0; i < level.spirits.length; i++) {
-        const s = level.spirits[i];
-        const spiritBox = {x:s.x, y:s.y, w:s.w, h:s.h};
-        const playerBox = {x:player.x, y:player.y, w:player.w, h:player.h};
-
-        if (aabb(playerBox, spiritBox)) {
-          if (window.GAME_QUESTIONS) {
-            const currentQuestions = questionsData[state.currentLevel];
-            let questionObj = currentQuestions ? currentQuestions[s.index] : null;
-
-            if (questionObj) {
-                openTrivia(questionObj, state.currentLevel);
-                s.x = -1000; // Mueve el spirit fuera de la pantalla
-            } else {
-                console.warn(`No se encontró la pregunta para el Nivel ${state.currentLevel + 1}, índice ${s.index}.`);
-            }
-          }
-        }
-      }
-  
-      // flag check (Fin de nivel)
-      const flag = level.flag;
-      if (player.x + player.w > flag.x && player.y < flag.y + flag.h) {
-        onLevelComplete();
-      }
-    }
-  
-    // ----------------------------------------------------------------------------------
-    // LÓGICA DE DIBUJO (Render)
-    // ----------------------------------------------------------------------------------
-    function render() {
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-  
-      const level = levels[state.currentLevel];
-      const bgImg = IMAGES[level.bgKey];
-      
-      // Fondo
-      if (bgImg) {
-        ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
-      } else {
-        const gradient = ctx.createLinearGradient(0,0,0,canvas.height);
-        if (state.currentLevel === 0) {
-          gradient.addColorStop(0,'#a0e9ff'); gradient.addColorStop(1,'#ffd1a8');
-        } else if (state.currentLevel === 1) {
-          gradient.addColorStop(0,'#ffddf4'); gradient.addColorStop(1,'#c7f9cc');
-        } else {
-          gradient.addColorStop(0,'#fff2a8'); gradient.addColorStop(1,'#d2e8ff');
-        }
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-      }
-  
-      // Platforms
-      ctx.fillStyle = '#07263b';
-      for (const p of level.platforms) ctx.fillRect(p.x, p.y, p.w, p.h);
-  
-      // Spirits (destellos)
-      for (const s of level.spirits) {
-        const t = Date.now() / 200;
-        ctx.save();
-        ctx.globalAlpha = 0.9 + Math.sin(t) * 0.1;
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(s.x + s.w/2, s.y + s.h/2, Math.max(s.w,s.h), 0, Math.PI*2);
-        ctx.fill();
-        ctx.restore();
-  
-        if (IMAGES.spirit) {
-          ctx.drawImage(IMAGES.spirit, s.x - 6, s.y - 6, s.w + 12, s.h + 12);
-        } else {
-          ctx.fillStyle = '#ff6b6b';
-          ctx.fillRect(s.x, s.y, s.w, s.h);
-        }
-      }
-  
-      // Flag (bandera)
-      ctx.fillStyle = '#2ecc71';
-      const f = level.flag;
-      ctx.fillRect(f.x, f.y, f.w, f.h);
-  
-      // Player
-      player.draw(ctx);
-    }
-    
-    // ----------------------------------------------------------------------------------
-    // MANEJO DE EVENTOS (Input Handling)
-    // ----------------------------------------------------------------------------------
-
-    // Teclado
-    window.addEventListener('keydown', (e) => {
-      keys[e.key.toLowerCase()] = true;
-      keys[e.key] = true;
-    });
-    window.addEventListener('keyup', (e) => {
-      keys[e.key.toLowerCase()] = false;
-      keys[e.key] = false;
-    });
-
-    // Controles Móviles (Touch)
-    const setMobileControl = (btn, state) => {
-        if (btn === leftBtn) mobileLeft = state;
-        else if (btn === rightBtn) mobileRight = state;
-        else if (btn === jumpBtn) mobileJump = state;
-    };
-
-    [leftBtn, rightBtn, jumpBtn].forEach(btn => {
-        // Eventos de inicio (mousedown, touchstart)
-        btn.addEventListener('mousedown', (e) => { e.preventDefault(); setMobileControl(btn, true); });
-        btn.addEventListener('touchstart', (e) => { e.preventDefault(); setMobileControl(btn, true); });
-        
-        // Eventos de finalización (mouseup, touchend, mouseleave/touchcancel)
-        const release = (e) => { 
-            e.preventDefault(); 
-            // Solo liberar si el evento es sobre el mismo botón o es un touchend global
-            if (e.target === btn || e.type.includes('touch')) {
-                setMobileControl(btn, false); 
-            }
+        submitAnswerBtn.onclick = () => {
+            closeModal('correct', questionObj.points || 10); 
         };
-        btn.addEventListener('mouseup', release);
-        btn.addEventListener('touchend', release);
-        btn.addEventListener('touchcancel', release);
-        btn.addEventListener('mouseleave', release); // Importante para PC si se usa mouse
-    });
-
-    // ----------------------------------------------------------------------------------
-    // CONTROLES: START, HOWTO, CLOSE, PAUSE, REPLAY
-    // ----------------------------------------------------------------------------------
-    
-    function startGame() {
-        menu.classList.add('hidden');
-        gameScreen.classList.remove('hidden');
-        mobileControls.classList.remove('hidden');
-        state.running = true;
-        state.score = 0;
-        state.badges = new Set();
-        startLevel(0);
-        lastTime = performance.now();
-        requestAnimationFrame(loop);
+        return;
     }
-  
-    startBtn.addEventListener('click', () => {
-      if (imagesLoaded === imagesToLoad) {
-        startGame();
-      } else {
-        startBtn.textContent = 'Cargando recursos...';
-        preloadImages(() => {
-          startBtn.textContent = 'Iniciar Juego';
-          startGame();
+
+    // Lógica para DILEMA/TRIVIA/MATCHING (Nivel 1 y 2)
+    modalQuestion.textContent = questionObj.question || questionObj.prompt || "Desafío Pendiente";
+    modalChoices.innerHTML = '';
+    let selectedIndex = -1;
+    let selectedPoints = 0; 
+
+    questionObj.choices.forEach((c, idx) => {
+        const btn = document.createElement('div');
+        btn.className = 'choice';
+        btn.textContent = isDilemma || qType === 'match' ? c.text : c; 
+        
+        btn.addEventListener('click', ()=> {
+            [...modalChoices.children].forEach(ch => ch.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedIndex = idx;
+            if (isDilemma || qType === 'match') {
+                selectedPoints = c.points !== undefined ? c.points : (c.correct ? 10 : 0);
+            }
         });
-      }
+        modalChoices.appendChild(btn);
     });
 
-    // Muestra las instrucciones
-    howtoBtn.addEventListener('click', ()=>{ 
-        howtoScreen.classList.remove('hidden'); 
-        menu.classList.add('hidden');
-    });
+    submitAnswerBtn.textContent = "Enviar";
+    submitAnswerBtn.classList.remove('hidden');
+    skipAnswerBtn.classList.remove('hidden');
 
-    // Cierra las instrucciones y regresa al menú
-    closeHowto.addEventListener('click', ()=>{ 
-        console.log('Cerrando howto-screen y volviendo al menú.');
-        howtoScreen.classList.add('hidden'); 
-        menu.classList.remove('hidden'); 
-        gameScreen.classList.add('hidden');
-    });
+    let timeLeft = (levelIndex === 0) ? 30 : 9999;
+    modalTimer.textContent = timeLeft;
+    modalTimer.classList.toggle('hidden', levelIndex !== 0);
+
+    if (modalTimerInterval) clearInterval(modalTimerInterval);
+    if (levelIndex === 0) {
+      modalTimerInterval = setInterval(()=> {
+        if (timeLeft > 0) {
+          timeLeft--;
+          modalTimer.textContent = timeLeft;
+        } else {
+          clearInterval(modalTimerInterval);
+          closeModal('wrong', 0); 
+        }
+      }, 1000);
+    }
+
+    submitAnswerBtn.onclick = () => {
+        if (selectedIndex >= 0) {
+            if (isDilemma || qType === 'match') {
+                if (selectedPoints > 0) {
+                    const resultType = selectedPoints === 10 ? 'correct' : 'partial';
+                    closeModal(resultType, selectedPoints);
+                } else {
+                    closeModal('wrong', 0);
+                }
+            } else { // Standard Trivia logic (Level 1)
+                const isCorrect = selectedIndex === questionObj.correctIndex;
+                const points = isCorrect ? 10 : 0;
+                closeModal(isCorrect ? 'correct' : 'wrong', points);
+            }
+        } else {
+            closeModal('wrong', 0); 
+        }
+    };
     
-    pauseBtn.addEventListener('click', ()=>{ state.paused = !state.paused; });
+    skipAnswerBtn.onclick = () => { 
+      closeModal('wrong', 0); 
+    };
+  }
   
-    replayBtn.addEventListener('click', ()=> {
-      endScreen.classList.add('hidden');
-      startLevel(0); 
-      menu.classList.remove('hidden'); 
+  function updateHUD(){ 
+      scoreEl.textContent = `Puntos: ${state.score}`; 
+      levelLabel.textContent = `Nivel ${state.currentLevel+1}: ${levels[state.currentLevel].name}`; 
+  }
+
+  function startLevel(index) {
+      state.currentLevel = index;
+      state.currentQuestionIndex = 0; 
+      player = new Player(40, 460); 
+      lastTime = performance.now();
+      state.paused = false;
+      updateHUD();
+  }
+
+  function onLevelComplete() {
+    state.score += 50; 
+    
+    const badgeMap = ['🟢 “Follower Confirmado”','🔵 “Espíritu ON”','🟣 “Influencer del Evangelio”'];
+    state.badges.add(badgeMap[state.currentLevel]);
+    
+    const nextLevelIndex = state.currentLevel + 1;
+
+    state.paused = true; 
+    playAudio('audio_level_complete');
+    displayFeedback(`¡Wow, has viralizado un mensaje de amor! NIVEL ${state.currentLevel + 1} COMPLETO! (+50 pts) 🏆`, 'level'); 
+    
+    setTimeout(() => {
+        if (nextLevelIndex < levels.length) {
+          startLevel(nextLevelIndex);
+          state.paused = false; 
+        } else {
+          openFinalChallenge();
+        }
+        updateHUD();
+    }, 3000); 
+  }
+
+  function openFinalChallenge() {
+    finalModal.classList.remove('hidden');
+    state.paused = true;
+    submitPostBtn.onclick = () => {
+      const text = finalPost.value.trim();
+      if (text.length === 0) {
+        alert('Escribe tu post para completar el reto final.');
+        return;
+      }
+      state.score += 30; // +30 pts por "Reto creativo"
+      finalModal.classList.add('hidden');
+      state.paused = false;
+      showEndScreen();
+    };
+  }
+
+  function showEndScreen() {
+    endScreen.classList.remove('hidden');
+    state.score += 100; // +100 pts por "Finaliza todo el juego"
+    finalScoreEl.textContent = `Puntos totales: ${state.score}`;
+    
+    badgesEl.innerHTML = '';
+    state.badges.forEach(b => {
+      const span = document.createElement('span');
+      span.className = 'badge';
+      span.textContent = b;
+      badgesEl.appendChild(span);
+    });
+  }
+
+  // ----------------------------------------------------------------------------------
+  // BU CLE PRINCIPAL DEL JUEGO (Game Loop)
+  // ----------------------------------------------------------------------------------
+  function loop(ts) { 
+      const dt = Math.min(0.05, (ts - lastTime) / 1000);
+      lastTime = ts;
+      
+      if (!state.paused && state.running) { 
+          update(dt);
+      }
+      
+      render();
+      
+      if (state.running) requestAnimationFrame(loop); 
+  }
+  
+  // ----------------------------------------------------------------------------------
+  // LÓGICA DE ACTUALIZACIÓN (Update)
+  // ----------------------------------------------------------------------------------
+  function update(dt) {
+    // Manejo del Feedback (Pausa visual)
+    if (feedback.timer > 0) {
+        feedback.timer -= dt;
+        if (feedback.timer <= 0 && feedback.type !== 'level') {
+            state.paused = false; 
+        }
+        if (feedback.type !== 'level' && !modal.classList.contains('hidden')) return; 
+        if (feedback.type === 'level') return; 
+    }
+    
+    // Lógica de movimiento
+    let moveLeft = keys['arrowleft'] || keys['a'] || mobileLeft;
+    let moveRight = keys['arrowright'] || keys['d'] || mobileRight;
+    let jump = keys['arrowup'] || keys['w'] || keys[' ' ] || mobileJump;
+
+    if (moveLeft) { player.vx = -player.speed; player.facing = 'left'; }
+    else if (moveRight) { player.vx = player.speed; player.facing = 'right'; }
+    else { player.vx = 0; player.facing = 'front'; }
+
+    if (jump && player.onGround) {
+      player.vy = player.jumpSpeed;
+      player.onGround = false;
+      player.facing = 'hand';
+      playAudio('audio_jump'); // 🔊 AUDIO: Salto
+    }
+
+    player.vy += 1500 * dt; // Gravedad
+    player.x += player.vx * dt;
+    player.y += player.vy * dt;
+
+    // Clamp player position
+    if (player.x < 0) player.x = 0;
+    // 🛑 CRÍTICO: El límite se ajusta al nuevo WORLD_WIDTH
+    if (player.x + player.w > WORLD_WIDTH) player.x = WORLD_WIDTH - player.w;
+    if (player.y > canvas.height) {
+      player.x = 40; player.y = 460; player.vy = 0; 
+    }
+
+    const level = levels[state.currentLevel];
+    player.onGround = false;
+    
+    // Colisión con plataformas (lógica sin cambios)
+    const previousY = player.y - player.vy * dt;
+    for (const p of level.platforms) {
+      const plat = {x:p.x,y:p.y,w:p.w,h:p.h};
+      
+      if (player.x + player.w > plat.x && player.x < plat.x + plat.w) {
+        if (player.y + player.h > plat.y && previousY + player.h <= plat.y) {
+          player.y = plat.y - player.h;
+          player.vy = 0;
+          player.onGround = true;
+        } else if (player.y < plat.y + plat.h && previousY >= plat.y + plat.h) {
+          player.y = plat.y + plat.h;
+          player.vy = 0;
+        }
+      }
+    }
+
+    // Colisión con spirits (Activa el modal)
+    spiritToRemoveIndex = -1;
+    for (let i = 0; i < level.spirits.length; i++) {
+      const s = level.spirits[i];
+      const spiritBox = {x:s.x, y:s.y, w:s.w, h:s.h};
+      const playerBox = {x:player.x, y:player.y, w:player.w, h:player.h};
+
+      if (aabb(playerBox, spiritBox)) {
+        if (window.GAME_QUESTIONS) {
+          const currentQuestions = questionsData[state.currentLevel];
+          let questionObj = currentQuestions ? currentQuestions[s.index] : null;
+
+          if (questionObj) {
+              openTrivia(questionObj, state.currentLevel, i); 
+              break; 
+          }
+        }
+      }
+    }
+
+    // flag check (Fin de nivel)
+    const flag = level.flag;
+    if (player.x + player.w > flag.x && player.y < flag.y + flag.h && player.x < flag.x + flag.w) {
+      onLevelComplete();
+    }
+    
+    // Lógica de la Cámara (Scroll)
+    cameraX = player.x - VIEWPORT_WIDTH / 2;
+    if (cameraX < 0) cameraX = 0;
+    // 🛑 CRÍTICO: El límite de la cámara se ajusta al nuevo WORLD_WIDTH
+    if (WORLD_WIDTH > VIEWPORT_WIDTH) {
+        if (cameraX > WORLD_WIDTH - VIEWPORT_WIDTH) cameraX = WORLD_WIDTH - VIEWPORT_WIDTH;
+    } else {
+        cameraX = 0; 
+    }
+  }
+
+  // ----------------------------------------------------------------------------------
+  // LÓGICA DE DIBUJO (Render)
+  // ----------------------------------------------------------------------------------
+  function render() {
+    ctx.clearRect(0,0,VIEWPORT_WIDTH,canvas.height);
+
+    const level = levels[state.currentLevel];
+    const bgKey = level.bgKey; 
+    const bgImg = IMAGES[bgKey];
+    
+    // Dibuja el fondo sin estirarlo más allá de su ancho (1280px)
+    if (bgImg) {
+      // Dibuja la parte de 900x600 de la imagen de 1280x720. 
+      // Si la imagen es 720 de alto, la estamos estirando ligeramente a 600, 
+      // pero el ancho será 1:1, evitando la pixelación.
+      ctx.drawImage(bgImg, cameraX, 0, VIEWPORT_WIDTH, canvas.height, 
+                    0, 0, VIEWPORT_WIDTH, canvas.height);
+    } else {
+      // Fallback
+      const gradient = ctx.createLinearGradient(0,0,0,canvas.height);
+      gradient.addColorStop(0,'#6dd3ff22'); gradient.addColorStop(1,'#ffd16611');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0,0,VIEWPORT_WIDTH,canvas.height);
+    }
+    
+    // ... (El resto del código render() permanece igual)
+    
+    ctx.save();
+    ctx.translate(-cameraX, 0); 
+    
+    // Platforms
+    ctx.fillStyle = '#07263b';
+    for (const p of level.platforms) ctx.fillRect(p.x, p.y, p.w, p.h);
+
+    // Spirits (destellos)
+    for (const s of level.spirits) {
+      const t = Date.now() / 200;
+      ctx.save();
+      ctx.globalAlpha = 0.9 + Math.sin(t) * 0.1;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(s.x + s.w/2, s.y + s.h/2, Math.max(s.w,s.h), 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+
+      if (IMAGES.spirit) {
+        ctx.drawImage(IMAGES.spirit, s.x - 6, s.y - 6, s.w + 12, s.h + 12);
+      } else {
+        ctx.fillStyle = '#ff6b6b';
+        ctx.fillRect(s.x, s.y, s.w, s.h);
+      }
+    }
+
+    // Flag (bandera)
+    ctx.fillStyle = '#2ecc71';
+    const f = level.flag;
+    ctx.fillRect(f.x, f.y, f.w, f.h);
+
+    // Player
+    player.draw(ctx);
+    
+    ctx.restore(); 
+    
+    
+    // Dibujar el feedback (si está activo)
+    if (feedback.timer > 0) {
+      ctx.save();
+      ctx.font = '24px "Press Start 2P"';
+      ctx.textAlign = 'center';
+      ctx.shadowColor = 'rgba(0,0,0,0.8)';
+      ctx.shadowBlur = 10;
+      
+      let color = '#ffffff';
+      if (feedback.type === 'correct') color = '#6ee7b7'; 
+      else if (feedback.type === 'wrong') color = '#ff6b6b'; 
+      else if (feedback.type === 'level') color = '#ffd166'; 
+      
+      ctx.fillStyle = color;
+      
+      const totalDuration = (feedback.type === 'level') ? 3 : 1.5;
+      const elapsed = totalDuration - feedback.timer;
+      const scale = 1 + 0.1 * Math.sin(elapsed * 10); 
+      
+      ctx.translate(VIEWPORT_WIDTH / 2, canvas.height / 2);
+      ctx.scale(scale, scale);
+      
+      ctx.fillText(feedback.message, 0, 0); 
+
+      ctx.restore();
+    }
+    
+  }
+  
+
+  // ... (El resto del código de Eventos, Controles e Inicialización permanece igual) ...
+  
+  // ----------------------------------------------------------------------------------
+  // MANEJO DE EVENTOS (Input Handling)
+  // ----------------------------------------------------------------------------------
+  
+  // Teclado
+  window.addEventListener('keydown', (e) => {
+    const key = e.key.toLowerCase();
+    if (['arrowleft', 'arrowright', 'arrowup', 'a', 'd', 'w', ' '].includes(key)) {
+      keys[key] = true; 
+      e.preventDefault(); 
+    }
+  });
+  window.addEventListener('keyup', (e) => {
+    const key = e.key.toLowerCase();
+    if (['arrowleft', 'arrowright', 'arrowup', 'a', 'd', 'w', ' '].includes(key)) {
+      keys[key] = false;
+    }
+  });
+
+  // Controles Móviles (Touch) - Unificado con pointer events
+  const setMobileControl = (btn, state) => {
+      if (btn === leftBtn) mobileLeft = state;
+      else if (btn === rightBtn) mobileRight = state;
+      else if (btn === jumpBtn) mobileJump = state;
+  };
+
+  [leftBtn, rightBtn, jumpBtn].forEach(btn => {
+      btn.addEventListener('pointerdown', (e) => { 
+          e.preventDefault(); 
+          setMobileControl(btn, true); 
+      });
+      
+      const release = (e) => { 
+          setMobileControl(btn, false); 
+      };
+      
+      btn.addEventListener('pointerup', release);
+      btn.addEventListener('pointercancel', release);
+      btn.addEventListener('pointerleave', release); 
+  });
+  
+  // ----------------------------------------------------------------------------------
+  // CONTROLES: START, HOWTO, CLOSE, PAUSE, REPLAY
+  // ----------------------------------------------------------------------------------
+
+  function startGame() {
+      menu.classList.add('hidden');
+      gameScreen.classList.remove('hidden');
+      state.running = true;
       state.score = 0;
       state.badges = new Set();
-    });
-  
-    updateHUD();
-  
-    // Función de detección de touch para mostrar controles
-    function isTouch() { return 'ontouchstart' in window || navigator.maxTouchPoints > 0; }
-    if (isTouch()) {
-      mobileControls.classList.remove('hidden');
+      startLevel(0);
+      lastTime = performance.now();
+      requestAnimationFrame(loop);
+  }
+
+  startBtn.addEventListener('click', () => {
+    if (resourcesLoaded < resourcesToLoad) {
+      startBtn.textContent = 'Cargando recursos...';
+      preloadResources(() => {
+        startBtn.textContent = 'Iniciar Juego';
+        startGame();
+      });
+    } else {
+        startGame();
     }
+  });
+
+  // Muestra las instrucciones
+  howtoBtn.addEventListener('click', ()=>{ 
+      howtoScreen.classList.remove('hidden'); 
+      menu.classList.add('hidden');
+  });
+
+  // Cierra las instrucciones y regresa al menú
+  closeHowto.addEventListener('click', ()=>{ 
+      howtoScreen.classList.add('hidden'); 
+      menu.classList.remove('hidden'); 
+      gameScreen.classList.add('hidden');
+  });
   
-    // precarga inicial 
-    preloadImages(() => {
-      console.log('Imágenes precargadas:', Object.keys(IMAGES).filter(k => IMAGES[k]));
-      // Opcional: mostrar un mensaje de "listo para jugar"
-    });
-  
-    window._game = { state, levels, startLevel: (i)=>startLevel(i), openTrivia, IMAGES };
+  pauseBtn.addEventListener('click', ()=>{ state.paused = !state.paused; });
+
+  replayBtn.addEventListener('click', ()=> {
+    endScreen.classList.add('hidden');
+    startLevel(0); 
+    menu.classList.remove('hidden'); 
+    state.score = 0;
+    state.badges = new Set();
+  });
+
+  updateHUD();
+
+  // precarga inicial al cargar la página
+  preloadResources(() => {
+    console.log('Recursos precargados. ¡Listo para jugar!');
+  });
+
+
 })();
