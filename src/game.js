@@ -1,4 +1,4 @@
-// src/game.js - Versión final con corrección de tamaño (WORLD_WIDTH = 1280) y Nivel 2 (Match Dilemma)
+// src/game.js - Versión final con Nivel 3 (Encounter/Fake News)
 
 (() => {
   // 📐 Variables de Configuración
@@ -48,8 +48,7 @@
   const closeMatchModalBtn = document.getElementById('close-match-modal');
 
 
-  // --- AUDIO Y RECURSOS
-  // 🛑 RUTA ABSOLUTA APLICADA: CORRECCIÓN PARA ERRORES DE CARGA 404
+  // --- AUDIO Y RECURSOS (Mantenido)
   const ASSETS = {
     // IMAGENES
     fondo_n1: 'src/Imagenes_L9/libro_9_fondos-01.png',
@@ -84,7 +83,7 @@
     { initial: 'F', don: 'Fortaleza' },
     { initial: 'P', don: 'Piedad' },
     { initial: 'T', don: 'Temor de Dios' },
-    { initial: 'C', don: 'Consejo' }, // C2 para evitar conflicto con Ciencia
+    { initial: 'C', don: 'Consejo' }, 
   ];
 
 
@@ -149,7 +148,10 @@
       timer: 0,
       type: null // 'correct', 'wrong', o 'level'
   };
-
+  
+  // 🛑 Variables del Modal (Trivia/Encounter)
+  let currentQuestion = null;
+  let currentSelection = null;
 
   // Función de Detección de Colisión (Axis-Aligned Bounding Box)
   function aabb(box1, box2) {
@@ -159,7 +161,7 @@
            box1.y + box2.h > box2.y;
   }
 
-  // Player Class 
+  // Player Class (Mantenido)
   class Player {
       constructor(x, y) {
           this.x = x; this.y = y;
@@ -186,7 +188,7 @@
       }
   }
 
-  // NIVELES
+  // NIVELES (Mantenido)
   const levels = [
     {
       name: "Stories",
@@ -246,10 +248,10 @@
         {x:1100,y:300,w:120,h:20},
       ],
       spirits: [
-        {x:120,y:420,w:36,h:36, type: 'action', index: 0}, 
-        {x:320,y:380,w:36,h:36, type: 'action', index: 1}, 
-        {x:540,y:320,w:36,h:36, type: 'action', index: 2}, 
-        {x:760,y:260,w:36,h:36, type: 'action', index: 3}, 
+        {x:120,y:420,w:36,h:36, type: 'encounter', index: 0}, 
+        {x:320,y:380,w:36,h:36, type: 'encounter', index: 1}, 
+        {x:540,y:320,w:36,h:36, type: 'encounter', index: 2}, 
+        {x:760,y:260,w:36,h:36, type: 'encounter', index: 3}, 
       ],
       flag: {x:1200,y:468,w:48,h:72}
     }
@@ -266,12 +268,15 @@
       feedback.timer = (type === 'level') ? 3 : 1.5; 
   }
   
-  // Función para cerrar el Modal de Trivia/Acción (Nivel 1 y 3)
+  // Función para cerrar el Modal de Trivia/Encounter (Nivel 1 y 3)
   function closeModal(resultType, pointsAwarded = 0) { 
     if (modalTimerInterval) { clearInterval(modalTimerInterval); modalTimerInterval = null; }
     modal.classList.add('hidden');
     state.paused = false;
     
+    // ⬅️ CORRECCIÓN: Limpiar el mensaje de feedback del modal al cerrar
+    modalFeedback.textContent = ''; 
+
     if (resultType === 'correct' || resultType === 'partial') {
         state.score += pointsAwarded; 
         const message = resultType === 'correct' 
@@ -293,7 +298,7 @@
     updateHUD();
   }
   
-  // 🛑 NUEVA FUNCIÓN: Cerrar el Modal de Emparejamiento (Nivel 2)
+  // Función para cerrar el Modal de Emparejamiento (Nivel 2) (Mantenida)
   function closeMatchModal(resultType, pointsAwarded = 0) {
       matchModal.classList.add('hidden');
       matchResultsBox.classList.add('hidden'); 
@@ -325,14 +330,15 @@
 
 
   function openTrivia(questionObj, levelIndex, spiritIndex) {
+    currentQuestion = questionObj; // Asignar la pregunta actual
+    currentSelection = null; // Reiniciar la selección
     state.paused = true;
     spiritToRemoveIndex = spiritIndex; 
     
     const qType = questionObj.type || 'trivia';
-    const isAction = qType === 'action';
-    const isMatchDilemma = qType === 'match_dilemma'; // Nuevo tipo de Nivel 2
+    const isMatchDilemma = qType === 'match_dilemma'; 
     
-    // 🛑 LÓGICA PARA NIVEL 2: DILEMA DE EMPAREJAMIENTO
+    //  LÓGICA PARA NIVEL 2: DILEMA DE EMPAREJAMIENTO (Mantenida)
     if (isMatchDilemma) {
         modal.classList.add('hidden'); 
         matchModal.classList.remove('hidden');
@@ -348,12 +354,9 @@
             card.setAttribute('data-initial', donInfo.initial);
             card.setAttribute('data-don', donInfo.don);
             
-            // Reemplazar C2 con C visualmente
-            // ...
-            const donInitialKey = donInfo.initial; // S, I, C, F, P, T, C2
+            const donInitialKey = donInfo.initial;
             const imagePath = ASSETS[`don_${donInitialKey}`];
             
-            // Creación de la tarjeta con efecto flip
             card.innerHTML = `
                 <div class="card-inner">
                     <div class="card-face card-front">
@@ -362,10 +365,8 @@
                     <div class="card-face card-back">${donInfo.don}: ${questionObj.correct_phrase}</div>
                 </div>
             `;
-            // ...
             
             card.onclick = (e) => {
-                // Bloquea clics si ya se mostraron los resultados
                 if (matchResultsBox.classList.contains('active')) return;
                 
                 const selectedInitial = card.getAttribute('data-initial');
@@ -391,7 +392,6 @@
                     matchResultsBox.classList.remove('hidden');
                     matchResultsBox.classList.add('active');
                     
-                    // Muestra el Don correcto volteándolo
                     const correctCard = dilemmaCardsContainer.querySelector(`[data-initial="${questionObj.initial}"]`);
                     if(correctCard) correctCard.classList.add('flipped');
                     
@@ -403,96 +403,172 @@
         
         return; // Sale de openTrivia
     } 
-
-    // Lógica para RETO DE ACCIÓN (Nivel 3)
-    if (isAction) {
-        modal.classList.remove('hidden');
-        matchModal.classList.add('hidden'); 
-        modalQuestion.textContent = questionObj.prompt || 'Reto de Acción';
-        modalChoices.innerHTML = `<div class='choice selected action-message'>${questionObj.message}</div>`;
-        submitAnswerBtn.textContent = "¡Entendido!";
-        submitAnswerBtn.classList.remove('hidden');
-        skipAnswerBtn.classList.add('hidden');
-        
-        submitAnswerBtn.onclick = () => {
-            closeModal('correct', questionObj.points || 10); 
-        };
-        return;
-    }
     
-    // Lógica para TRIVIA (Nivel 1)
+    // Lógica para TRIVIA (Nivel 1) y ENCOUNTER (Nivel 3)
+    
     modal.classList.remove('hidden');
     matchModal.classList.add('hidden'); 
     
-    const isDilemma = qType === 'dilemma'; 
+    // Resetear elementos
+    modalChoices.innerHTML = '';
+    modalTimer.classList.remove('hidden');
+    skipAnswerBtn.classList.remove('hidden');
+    modalFeedback.textContent = ''; // Limpiar feedback anterior
+    submitAnswerBtn.textContent = "Enviar";
+    
+    // ⬅️ CORRECCIÓN 1: Deshabilitar el botón de envío al abrir (excepto para Nivel 1 si usa solo choices)
+    submitAnswerBtn.disabled = true;
+
+
+    const isDilemma = qType === 'dilemma' || qType === 'trivia'; 
     
     modalTitle.textContent = `Desafío - ${questionObj.title || levels[levelIndex].name}`;
     modalQuestion.textContent = questionObj.question || questionObj.prompt || "Desafío Pendiente";
-    modalChoices.innerHTML = '';
-    let selectedIndex = -1;
-    let selectedPoints = 0; 
+    
+    // 🛑 LÓGICA ESPECÍFICA PARA ENCOUNTER (Nivel 3)
+    if (qType === 'encounter') {
+        modalTimer.classList.add('hidden'); // Ocultar timer
+        skipAnswerBtn.classList.add('hidden'); // Ocultar skip
+        submitAnswerBtn.textContent = "Confirmar";
+        submitAnswerBtn.disabled = true; // ⬅️ CORRECCIÓN: Asegurar deshabilitado para Nivel 3
 
-    questionObj.choices.forEach((c, idx) => {
-        const btn = document.createElement('div');
-        btn.className = 'choice';
-        btn.textContent = c.text || c; 
+
+        // Botón 'Verdad (Conexión Divina)'
+        const btnTrue = document.createElement('button');
+        btnTrue.textContent = 'Verdad (Conexión Divina)';
+        // ⬅️ CORRECCIÓN: Usar 'choice' y 'button' para Nivel 3 para facilitar el estilo y la deshabilitación
+        btnTrue.className = 'choice encounter-choice';
+        btnTrue.dataset.answer = 'true'; 
+        modalChoices.appendChild(btnTrue);
+
+        // Botón 'Falso (Fake News)'
+        const btnFalse = document.createElement('button');
+        btnFalse.textContent = 'Falso (Fake News)';
+        btnFalse.className = 'choice encounter-choice';
+        btnFalse.dataset.answer = 'false';
+        modalChoices.appendChild(btnFalse);
+
+    } else { 
+        // 🛑 LÓGICA PARA TRIVIA (Nivel 1)
         
-        btn.addEventListener('click', ()=> {
-            [...modalChoices.children].forEach(ch => ch.classList.remove('selected'));
-            btn.classList.add('selected');
-            selectedIndex = idx;
-            if (isDilemma) {
-                selectedPoints = c.points !== undefined ? c.points : (c.correct ? 10 : 0);
-            }
+        questionObj.choices.forEach((c, idx) => {
+            const btn = document.createElement('div');
+            btn.className = 'choice';
+            btn.textContent = c.text || c; 
+            
+            // Guardamos el índice para la verificación de respuesta
+            btn.dataset.index = idx; 
+            modalChoices.appendChild(btn);
         });
-        modalChoices.appendChild(btn);
-    });
+        
+        // Nivel 1 (Trivia) requiere un clic en una opción para habilitar el botón "Enviar"
+        submitAnswerBtn.disabled = true; 
 
-    submitAnswerBtn.textContent = "Enviar";
-    submitAnswerBtn.classList.remove('hidden');
-    skipAnswerBtn.classList.remove('hidden');
-
-    let timeLeft = (levelIndex === 0) ? 30 : 9999;
-    modalTimer.textContent = timeLeft;
-    modalTimer.classList.toggle('hidden', levelIndex !== 0);
-
-    if (modalTimerInterval) clearInterval(modalTimerInterval);
-    if (levelIndex === 0) {
-      modalTimerInterval = setInterval(()=> {
-        if (timeLeft > 0) {
-          timeLeft--;
-          modalTimer.textContent = timeLeft;
-        } else {
-          clearInterval(modalTimerInterval);
-          closeModal('wrong', 0); 
+        // Configurar el timer para Nivel 1
+        let timeLeft = (levelIndex === 0) ? 30 : 9999;
+        modalTimer.textContent = timeLeft;
+        modalTimer.classList.toggle('hidden', levelIndex !== 0);
+    
+        if (modalTimerInterval) clearInterval(modalTimerInterval);
+        if (levelIndex === 0) {
+          modalTimerInterval = setInterval(()=> {
+            if (timeLeft > 0) {
+              timeLeft--;
+              modalTimer.textContent = timeLeft;
+            } else {
+              clearInterval(modalTimerInterval);
+              closeModal('wrong', 0); 
+            }
+          }, 1000);
         }
-      }, 1000);
     }
 
-    submitAnswerBtn.onclick = () => {
-        if (selectedIndex >= 0) {
-            if (isDilemma) {
-                if (selectedPoints > 0) {
-                    const resultType = selectedPoints === 10 ? 'correct' : 'partial';
-                    closeModal(resultType, selectedPoints);
-                } else {
-                    closeModal('wrong', 0);
-                }
-            } else { // Standard Trivia logic (Level 1)
-                const isCorrect = selectedIndex === questionObj.correctIndex;
-                const points = isCorrect ? 10 : 0;
-                closeModal(isCorrect ? 'correct' : 'wrong', points);
+
+    // Listener de selección unificado para Trivia y Encounter
+    modalChoices.querySelectorAll('.choice').forEach(choice => {
+        choice.addEventListener('click', ()=> {
+            [...modalChoices.children].forEach(ch => ch.classList.remove('selected'));
+            choice.classList.add('selected');
+            
+            // ⬅️ CORRECCIÓN 2: Habilitar el botón de envío al hacer clic en cualquier opción
+            submitAnswerBtn.disabled = false; 
+
+            if (currentQuestion.type === 'encounter') {
+                currentSelection = choice.dataset.answer; 
+            } else {
+                // Trivia / Dilemma
+                currentSelection = parseInt(choice.dataset.index);
             }
-        } else {
-            closeModal('wrong', 0); 
-        }
-    };
+        });
+    });
     
+    // La validación se mueve al listener externo `submitAnswerBtn`
     skipAnswerBtn.onclick = () => { 
       closeModal('wrong', 0); 
     };
   }
   
+  // ----------------------------------------------------------------------
+  // 🛑 FUNCIÓN: Lógica de envío de respuesta (Unificado)
+  // ----------------------------------------------------------------------
+  function submitModalAnswer() {
+      if (currentSelection === null) {
+          modalFeedback.textContent = '¡Selecciona una opción antes de confirmar!';
+          return;
+      }
+
+      submitAnswerBtn.disabled = true;
+      let isCorrect = false;
+      let points = 0;
+      let resultType = 'wrong';
+
+      if (currentQuestion.type === 'trivia') {
+          // Lógica de validación para Trivia (Nivel 1)
+          isCorrect = currentSelection === currentQuestion.correctIndex;
+          points = isCorrect ? 10 : 0;
+          resultType = isCorrect ? 'correct' : 'wrong';
+
+      } else if (currentQuestion.type === 'encounter') {
+          // Lógica de validación para Encounter (Nivel 3)
+          const correctAnswerStr = String(currentQuestion.correctAnswer);
+          isCorrect = currentSelection === correctAnswerStr;
+          points = isCorrect ? currentQuestion.points : 0;
+          resultType = isCorrect ? 'correct' : 'wrong';
+          
+      } // Se omite 'dilemma' ya que tu lógica de Nivel 2 lo maneja en el onclick de la tarjeta.
+
+      // Mostrar el resultado en el modal
+      if (isCorrect) {
+          // ⬅️ CORRECCIÓN: El updateScore y el mensaje final deben ocurrir solo después de confirmar
+          state.score += points;
+          modalFeedback.textContent = 
+              currentQuestion.type === 'encounter' ? 
+              `¡Validado! +${points} pts. Es una Conexión Divina.` : 
+              `¡Correcto! ¡Sigue así! (+${points} pts)`;
+      } else {
+          modalFeedback.textContent = 
+              currentQuestion.type === 'encounter' ? 
+              '¡Fake News! Esa conexión no es del Evangelio.' : 
+              'Respuesta incorrecta. Sigue evangelizando.';
+      }
+
+      // Deshabilitar botones de opción para que no puedan cambiarla
+      document.querySelectorAll('#modal-choices .choice').forEach(btn => btn.disabled = true);
+
+      // Cierra el modal después de 2 segundos
+      setTimeout(() => {
+          closeModal(resultType, points);
+          // Re-habilitar botones para el próximo uso (aunque closeModal lo limpia, lo dejamos para la próxima apertura)
+          document.querySelectorAll('#modal-choices .choice').forEach(btn => btn.disabled = false);
+      }, 2000); 
+  }
+
+  // ----------------------------------------------------------------------
+  // Listener Global para el botón 'Enviar/Confirmar' del Modal
+  // ----------------------------------------------------------------------
+  submitAnswerBtn.addEventListener('click', submitModalAnswer);
+
+
   function updateHUD(){ 
       scoreEl.textContent = `Puntos: ${state.score}`; 
       levelLabel.textContent = `Nivel ${state.currentLevel+1}: ${levels[state.currentLevel].name}`; 
@@ -559,9 +635,13 @@
       badgesEl.appendChild(span);
     });
   }
+  
+  function updateScore(points) {
+    state.score += points;
+  }
 
   // ----------------------------------------------------------------------------------
-  // BUCLE PRINCIPAL DEL JUEGO (Game Loop)
+  // BUCLE PRINCIPAL DEL JUEGO (Game Loop) (Mantenido)
   // ----------------------------------------------------------------------------------
   function loop(ts) { 
       const dt = Math.min(0.05, (ts - lastTime) / 1000);
@@ -577,7 +657,7 @@
   }
   
   // ----------------------------------------------------------------------------------
-  // LÓGICA DE ACTUALIZACIÓN (Update)
+  // LÓGICA DE ACTUALIZACIÓN (Update) (Mantenido)
   // ----------------------------------------------------------------------------------
   function update(dt) {
     // Manejo del Feedback (Pausa visual)
@@ -673,7 +753,7 @@
   }
 
   // ----------------------------------------------------------------------------------
-  // LÓGICA DE DIBUJO (Render)
+  // LÓGICA DE DIBUJO (Render) (Mantenido)
   // ----------------------------------------------------------------------------------
   function render() {
     ctx.clearRect(0,0,VIEWPORT_WIDTH,canvas.height);
@@ -760,17 +840,25 @@
   
 
   // ----------------------------------------------------------------------------------
-  // MANEJO DE EVENTOS (Input Handling)
+  // MANEJO DE EVENTOS (Input Handling) (Mantenido)
   // ----------------------------------------------------------------------------------
   
   // Teclado
-  window.addEventListener('keydown', (e) => {
-    const key = e.key.toLowerCase();
-    if (['arrowleft', 'arrowright', 'arrowup', 'a', 'd', 'w', ' '].includes(key)) {
-      keys[key] = true; 
-      e.preventDefault(); 
-    }
-  });
+window.addEventListener('keydown', (e) => {
+  const key = e.key.toLowerCase();
+  
+  // ⬅️ CORRECCIÓN: NO prevenir acciones de teclado si el foco está en un campo de texto (como el textarea del reto final).
+  const focusedElement = document.activeElement;
+  if (focusedElement === finalPost) {
+      // Permitir la entrada de texto normal si el usuario está escribiendo el post.
+      return; 
+  }
+
+  if (['arrowleft', 'arrowright', 'arrowup', 'a', 'd', 'w', ' '].includes(key)) {
+    keys[key] = true; 
+    e.preventDefault(); 
+  }
+});
   window.addEventListener('keyup', (e) => {
     const key = e.key.toLowerCase();
     if (['arrowleft', 'arrowright', 'arrowup', 'a', 'd', 'w', ' '].includes(key)) {
@@ -801,7 +889,7 @@
   });
   
   // ----------------------------------------------------------------------------------
-  // CONTROLES: START, HOWTO, CLOSE, PAUSE, REPLAY
+  // CONTROLES: START, HOWTO, CLOSE, PAUSE, REPLAY (Mantenido)
   // ----------------------------------------------------------------------------------
 
   function startGame() {
@@ -815,45 +903,49 @@
       requestAnimationFrame(loop);
   }
 
-  startBtn.addEventListener('click', () => {
-    if (resourcesLoaded < resourcesToLoad) {
-      startBtn.textContent = 'Cargando recursos...';
-      preloadResources(() => {
-        startBtn.textContent = 'Iniciar Juego';
-        startGame();
-      });
-    } else {
-        startGame();
-    }
-  });
+  startBtn.addEventListener('click', startGame);
 
-  howtoBtn.addEventListener('click', ()=>{ 
-      howtoScreen.classList.remove('hidden'); 
-      menu.classList.add('hidden');
-  });
-
-  closeHowto.addEventListener('click', ()=>{ 
-      howtoScreen.classList.add('hidden'); 
-      menu.classList.remove('hidden'); 
-      gameScreen.classList.add('hidden');
+  howtoBtn.addEventListener('click', () => {
+    menu.classList.add('hidden');
+    howtoScreen.classList.remove('hidden');
   });
   
-  pauseBtn.addEventListener('click', ()=>{ state.paused = !state.paused; });
+  closeHowto.addEventListener('click', () => {
+    howtoScreen.classList.add('hidden');
+    menu.classList.remove('hidden');
+  });
 
-  replayBtn.addEventListener('click', ()=> {
+  replayBtn.addEventListener('click', () => {
     endScreen.classList.add('hidden');
-    startLevel(0); 
-    menu.classList.remove('hidden'); 
+    menu.classList.remove('hidden');
     state.score = 0;
-    state.badges = new Set();
+    state.badges.clear();
+    startLevel(0); // Reinicia el nivel 0
+    // state.running permanece true
   });
-
-  updateHUD();
-
-  // precarga inicial al cargar la página
-  preloadResources(() => {
-    console.log('Recursos precargados. ¡Listo para jugar!');
+  
+  pauseBtn.addEventListener('click', () => {
+    state.paused = !state.paused;
+    pauseBtn.textContent = state.paused ? '▶' : '||';
+    if(state.paused) {
+        displayFeedback('Juego Pausado', 'pause');
+        if(modalTimerInterval) clearInterval(modalTimerInterval);
+    } else {
+        feedback.timer = 0; // Quita el mensaje de pausa
+        // Si el modal de trivia está abierto (solo en Nivel 1), reactivar timer
+        if(!modal.classList.contains('hidden') && state.currentLevel === 0) {
+            // No reactivamos el timer para simplificar, el jugador puede reintentar si se le acaba
+        }
+    }
   });
+  
+  // Inicialización
+  function init() {
+    preloadResources(() => {
+        // Recursos cargados, iniciar UI.
+        menu.classList.remove('hidden');
+    });
+  }
 
-
+  window.addEventListener('load', init);
 })();
