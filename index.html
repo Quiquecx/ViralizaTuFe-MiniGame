@@ -1,117 +1,101 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Desafío #ViralizaTuFe</title>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rubik:wght@400;600;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Viraliza Tu Fe</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div id="app">
-    <header id="menu" class="centered visible">
-      <img id="logo" alt="Logo Desafío #ViralizaTuFe" src="src/Imagenes_L9/FondoIndex.png" />
-      <h1>Desafío #ViralizaTuFe</h1>
-      <div class="menu-buttons">
-        <button id="start-game" class="primary">Iniciar Juego</button>
-        <button id="how-to" class="secondary">Cómo jugar</button>
-        <div id="credits">Un viaje de conexión divina - 6to grado </div>
-      </div>
-    </header>
 
-    <main id="game-screen" class="hidden">
-      <div id="hud">
-        <div id="left-hud">
-          <div id="level-label">Nivel 1</div>
+    <div id="game-container">
+        <div id="menu" class="screen">
+            <h1>Viraliza Tu Fe</h1>
+            <p>¡Prepárate para la misión!</p>
+            <button id="start-game">Iniciar Juego</button>
+            <button id="how-to">Cómo Jugar</button>
         </div>
-        <div id="center-hud">
-          <div id="score">Puntos: 0</div>
-        </div>
-        <div id="right-hud">
-          <button id="pause-btn" title="Pausa">⏸</button>
-        </div>
-      </div>
 
-      <div id="game-container">
-        <canvas id="game-canvas" width="900" height="600"></canvas>
-
-        <div id="mobile-controls">
-  
-          <div class="controls-group left">
-            <button class="ctl" id="left-btn">◀</button>
-            <button class="ctl" id="right-btn">▶</button>
-          </div>
+        <div id="howto-screen" class="screen hidden">
+            <h2>Instrucciones</h2>
+            <p>Usa las flechas (← → ↑) o WASD para moverte y saltar.</p>
+            <p>Recoge los espíritus para enfrentar un desafío.</p>
+            <p>¡Llega a la meta para pasar de nivel!</p>
+            <button id="close-howto">Volver al Menú</button>
+        </div>
         
-          <div class="controls-group right">
-            <button class="ctl" id="jump-btn">▲</button>
-          </div>
-        
-        </div>
-      </div>
-    </main>
-
-    <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
-        <div class="modal-content">
-          
-          <div class="phone-frame">
-      
-            <h2 id="modal-title">Pregunta</h2>
-            <p id="modal-question"></p>
-            <div id="modal-choices"></div>
-            <div id="modal-timer" class="timer">30</div>
-            <div class="modal-actions">
-              <button id="submit-answer" class="primary">Enviar</button>
-              <button id="skip-answer" class="secondary">Omitir</button>
+        <div id="game-screen" class="hidden">
+            <div id="hud">
+                <span id="level-label">Nivel 1: Stories</span>
+                <span id="score">Puntos: 0</span>
+                <button id="pause-btn">||</button>
             </div>
-            <div id="modal-feedback" class="feedback"></div>
-      
-          </div>
-      
+            <canvas id="game-canvas" width="900" height="600"></canvas>
+            
+            <div id="mobile-controls">
+                <div class="controls-group left">
+                    <button class="ctl" id="left-btn">◀</button>
+                    <button class="ctl" id="right-btn">▶</button>
+                </div>
+                
+                <div class="controls-group right">
+                    <button class="ctl" id="jump-btn">▲</button>
+                </div>
+            </div>
+            
+            <div id="modal" class="modal hidden">
+                <div class="modal-content">
+                    <h2 id="modal-title">Desafío</h2>
+                    <p id="modal-question"></p>
+                    <div id="modal-choices">
+                        </div>
+                    <div id="modal-feedback"></div>
+                    <div id="modal-footer">
+                        <span id="modal-timer" class="hidden"></span>
+                        <button id="submit-answer">Enviar</button>
+                        <button id="skip-answer">Saltar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="match-modal" class="modal hidden">
+                <div class="modal-content">
+                    <h2 id="match-title">Dilema - En Collab con el E.S.</h2>
+                    <p id="match-prompt" class="match-prompt-text"></p>
+                    
+                    <div id="dilemma-cards">
+                        </div>
+                    
+                    <div id="match-results-box" class="match-results-box hidden">
+                        <p id="match-feedback-message"></p>
+                        <p id="match-correct-phrase"></p>
+                        <button id="close-match-modal">Continuar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="final-modal" class="modal hidden">
+                <div class="modal-content">
+                    <h2 id="final-title">¡RETO FINAL! Post del Día</h2>
+                    <p>Elabora un post corto y creativo con una frase sobre los dones que has aprendido, y cómo puedes viralizar la fe hoy.</p>
+                    <textarea id="final-post" rows="4" placeholder="Mi post es..."></textarea>
+                    <button id="submit-post">¡Publicar!</button>
+                </div>
+            </div>
+            
+            <div id="end-screen" class="screen hidden">
+                <h2>¡Misión Cumplida!</h2>
+                <p>Tu mensaje se ha viralizado.</p>
+                <h3 id="final-score">Puntos totales: </h3>
+                <h4>Logros:</h4>
+                <div id="badges"></div>
+                <button id="replay">Volver a Empezar</button>
+            </div>
         </div>
-      </div>
-      
-
-    <div id="final-modal" class="modal hidden">
-      <div class="modal-content">
-        <h2>Reto Final: Tu Post de Misericordia</h2>
-        <p>Escribe tu "Post de Misericordia". Al enviarlo, tu publicación aparecerá en una simulación y ganarás puntos.</p>
-        <textarea id="final-post" placeholder="Escribe tu mensaje..."></textarea>
-        <div class="modal-actions">
-          <button id="submit-post" class="primary">Publicar</button>
-        </div>
-      </div>
     </div>
 
-    <div id="end-screen" class="modal hidden">
-      <div class="modal-content">
-        <h2>¡Juego completado!</h2>
-        <div id="final-score">Puntos totales: 0</div>
-        <div id="badges"></div>
-        <button id="replay" class="primary">Jugar de nuevo</button>
-      </div>
-    </div>
-
-    <div id="howto-screen" class="modal hidden">
-      <div class="modal-content">
-        <h2>Cómo jugar</h2>
-        <ul>
-          <li>Mueve: flechas / WASD / controles móviles.</li>
-          <li>Toca los destellos (Espíritu Santo) para responder preguntas.</li>
-          <li>Nivel 1: Trivia con 30s por pregunta. Respuestas correctas +10 pts.</li>
-          <li>Al pasar una bandera: +50 pts. Reto final: +30 pts.</li>
-        </ul>
-        <button id="close-howto" class="primary">Cerrar</button>
-      </div>
-    </div>
-
-    <footer id="footer" class="centered">
-      <small>Itinerario de educacion en la FE · Diseño responsive · Suena mejor con auriculares</small>
-    </footer>
-  </div>
-
-  <script src="src/questions.js"></script>
-  <script src="src/game.js"></script>
+    <script src="src/questions.js"></script>
+    <script src="src/game.js"></script>
 </body>
 </html>

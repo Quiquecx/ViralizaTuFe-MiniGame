@@ -1,14 +1,14 @@
-// src/game.js - Versión con corrección de tamaño de imagen (WORLD_WIDTH = 1280)
+// src/game.js - Versión final con corrección de tamaño (WORLD_WIDTH = 1280) y Nivel 2 (Match Dilemma)
 
 (() => {
-  // 📐 CORRECCIÓN CRÍTICA: Ajustar el ancho del mundo al tamaño de la imagen de fondo.
+  // 📐 Variables de Configuración
   const WORLD_WIDTH = 1280; 
   const VIEWPORT_WIDTH = 900; 
 
   const canvas = document.getElementById('game-canvas');
   const ctx = canvas.getContext('2d');
 
-  // UI elems
+  // UI elems (Generales y Nivel 1/3)
   const menu = document.getElementById('menu');
   const startBtn = document.getElementById('start-game');
   const howtoBtn = document.getElementById('how-to');
@@ -33,12 +33,23 @@
   const finalScoreEl = document.getElementById('final-score');
   const badgesEl = document.getElementById('badges');
   const replayBtn = document.getElementById('replay');
-  const mobileControls = document.getElementById('mobile-controls');
   const leftBtn = document.getElementById('left-btn');
   const rightBtn = document.getElementById('right-btn');
-  const jumpBtn = document = document.getElementById('jump-btn');
+  const jumpBtn = document.getElementById('jump-btn');
+
+  // 🛑 ELEMENTOS DE UI PARA EL MATCH-MODAL (Nivel 2)
+  const matchModal = document.getElementById('match-modal');
+  const matchTitle = document.getElementById('match-title');
+  const matchPrompt = document.getElementById('match-prompt');
+  const dilemmaCardsContainer = document.getElementById('dilemma-cards');
+  const matchResultsBox = document.getElementById('match-results-box');
+  const matchFeedbackMessage = document.getElementById('match-feedback-message');
+  const matchCorrectPhrase = document.getElementById('match-correct-phrase');
+  const closeMatchModalBtn = document.getElementById('close-match-modal');
+
 
   // --- AUDIO Y RECURSOS
+  // 🛑 RUTA ABSOLUTA APLICADA: CORRECCIÓN PARA ERRORES DE CARGA 404
   const ASSETS = {
     // IMAGENES
     fondo_n1: 'src/Imagenes_L9/libro_9_fondos-01.png',
@@ -49,6 +60,14 @@
     player_right: 'src/Imagenes_L9/Elias_perfil_derecho.png',
     player_left: 'src/Imagenes_L9/Elias_perfll_izquierdo.png', 
     spirit: 'src/Imagenes_L9/Espiritu_fuego.png',
+
+    don_S: 'src/Imagenes_L9/S.png', // Sabiduría
+    don_I: 'src/Imagenes_L9/I.png', // Inteligencia
+    don_CI: 'src/Imagenes_L9/CI.png', // Ciencia
+    don_F: 'src/Imagenes_L9/F.png', // Fortaleza
+    don_P: 'src/Imagenes_L9/P.png', // Piedad
+    don_T: 'src/Imagenes_L9/T.png', // Temor de Dios
+    don_C: 'src/Imagenes_L9/C.png', // Consejo (C2 para evitar conflicto con Ciencia)
     
     // AUDIO (ASUMIMOS RUTAS MP3)
     audio_jump: 'src/Audio/jump.mp3', 
@@ -56,6 +75,18 @@
     audio_wrong: 'src/Audio/wrong.mp3',
     audio_level_complete: 'src/Audio/level_complete.mp3',
   };
+  
+  // 🛑 Array de iniciales de los Dones
+  const DONES_INICIALES = [
+    { initial: 'S', don: 'Sabiduría' },
+    { initial: 'I', don: 'Inteligencia' },
+    { initial: 'CI', don: 'Ciencia' },
+    { initial: 'F', don: 'Fortaleza' },
+    { initial: 'P', don: 'Piedad' },
+    { initial: 'T', don: 'Temor de Dios' },
+    { initial: 'C', don: 'Consejo' }, // C2 para evitar conflicto con Ciencia
+  ];
+
 
   const IMAGES = {};
   const AUDIO = {};
@@ -95,7 +126,6 @@
       }
   }
 
-
   // game state
   let state = {
     running: false,
@@ -106,15 +136,13 @@
     currentQuestionIndex: 0, 
   };
   
-  // ⚠️ CRÍTICO: Variables globales
+  // Variables globales
   let player; 
   let lastTime = 0;
   let keys = {};
   let mobileLeft = false;
   let mobileRight = false;
   let mobileJump = false;
-  
-  // 🚀 NUEVO: Variables para la cámara y el feedback animado
   let cameraX = 0; 
   let feedback = {
       message: null,
@@ -158,13 +186,13 @@
       }
   }
 
-  // 🚀 NIVELES AJUSTADOS A WORLD_WIDTH = 1280
+  // NIVELES
   const levels = [
     {
       name: "Stories",
-      bgKey: 'fondo_n1', // Fondo de Nivel 1
+      bgKey: 'fondo_n1', 
       platforms: [
-        {x:0,y:540,w:WORLD_WIDTH,h:60}, // Plataforma base extendida
+        {x:0,y:540,w:WORLD_WIDTH,h:60}, 
         {x:100,y:440,w:140,h:20},
         {x:300,y:380,w:140,h:20},
         {x:500,y:320,w:140,h:20},
@@ -178,37 +206,36 @@
         {x:530,y:260,w:36,h:36, type: 'trivia', index: 2}, 
         {x:730,y:380,w:36,h:36, type: 'trivia', index: 3}, 
         {x:940,y:320,w:36,h:36, type: 'trivia', index: 4}, 
-        // Eliminados 3 spirits para encajar mejor en 1280px. El índice 7 de questions.js no se usa.
       ],
-      flag: {x:1200,y:468,w:48,h:72} // Bandera más cerca
+      flag: {x:1200,y:468,w:48,h:72} 
     },
     {
       name: "Reels",
-      bgKey: 'fondo_n2', // Fondo de Nivel 2: Dilemas (Dones) y Trivia de Símbolos
+      bgKey: 'fondo_n2', 
       platforms: [
         {x:0,y:540,w:WORLD_WIDTH,h:60},
         {x:100,y:460,w:140,h:20}, // Sabiduría
-        {x:280,y:400,w:140,h:20}, // Ciencia
-        {x:460,y:340,w:140,h:20}, // Piedad
-        {x:640,y:480,w:140,h:20}, // Temor de Dios
-        {x:820,y:420,w:140,h:20}, // Inteligencia
-        {x:1000,y:360,w:140,h:20},// Fortaleza
+        {x:280,y:400,w:140,h:20}, // Inteligencia
+        {x:460,y:340,w:140,h:20}, // Ciencia
+        {x:640,y:480,w:140,h:20}, // Fortaleza
+        {x:820,y:420,w:140,h:20}, // Piedad
+        {x:1000,y:360,w:140,h:20},// Temor de Dios
+        {x:1150,y:500,w:100,h:20}, // Consejo (Cercano a la meta)
       ],
       spirits: [
-        {x:120,y:420,w:36,h:36, type: 'dilemma', index: 0}, 
-        {x:320,y:360,w:36,h:36, type: 'dilemma', index: 1}, 
-        {x:500,y:300,w:36,h:36, type: 'dilemma', index: 2}, 
-        {x:680,y:420,w:36,h:36, type: 'dilemma', index: 3}, 
-        {x:850,y:380,w:36,h:36, type: 'dilemma', index: 4}, 
-        {x:1050,y:320,w:36,h:36, type: 'dilemma', index: 5}, 
-        {x:1200,y:500,w:36,h:36, type: 'dilemma', index: 6}, // Consejo
-        // El último spirit (matching, index 7) se elimina por falta de espacio, o se activa al final del nivel.
+        {x:120,y:420,w:36,h:36, type: 'match_dilemma', index: 0}, // Sabiduría
+        {x:320,y:360,w:36,h:36, type: 'match_dilemma', index: 1}, // Inteligencia
+        {x:500,y:300,w:36,h:36, type: 'match_dilemma', index: 2}, // Ciencia
+        {x:680,y:440,w:36,h:36, type: 'match_dilemma', index: 3}, // Fortaleza
+        {x:850,y:380,w:36,h:36, type: 'match_dilemma', index: 4}, // Piedad
+        {x:1050,y:320,w:36,h:36, type: 'match_dilemma', index: 5}, // Temor de Dios
+        {x:1200,y:460,w:36,h:36, type: 'match_dilemma', index: 6}, // Consejo
       ],
       flag: {x:1200,y:468,w:48,h:72}
     },
     {
       name: "Post del Día",
-      bgKey: 'fondo_n3', // Fondo de Nivel 3: Acciones/Reflexión
+      bgKey: 'fondo_n3', 
       platforms: [
         {x:0,y:540,w:WORLD_WIDTH,h:60},
         {x:100,y:460,w:120,h:20},
@@ -219,16 +246,16 @@
         {x:1100,y:300,w:120,h:20},
       ],
       spirits: [
-        {x:120,y:420,w:36,h:36, type: 'action', index: 0}, // Alguien triste y solo
-        {x:320,y:380,w:36,h:36, type: 'action', index: 1}, // Notificación celular (Mensaje Evangelio)
-        {x:540,y:320,w:36,h:36, type: 'action', index: 2}, // Niños cantando y alegres
-        {x:760,y:260,w:36,h:36, type: 'action', index: 3}, // Mensaje de María
+        {x:120,y:420,w:36,h:36, type: 'action', index: 0}, 
+        {x:320,y:380,w:36,h:36, type: 'action', index: 1}, 
+        {x:540,y:320,w:36,h:36, type: 'action', index: 2}, 
+        {x:760,y:260,w:36,h:36, type: 'action', index: 3}, 
       ],
       flag: {x:1200,y:468,w:48,h:72}
     }
   ];
 
-  // --- Trivia modal logic
+  // --- Modal logic
   let modalTimerInterval = null;
   let questionsData = [window.GAME_QUESTIONS.level1, window.GAME_QUESTIONS.level2, window.GAME_QUESTIONS.level3];
   let spiritToRemoveIndex = -1; 
@@ -239,6 +266,7 @@
       feedback.timer = (type === 'level') ? 3 : 1.5; 
   }
   
+  // Función para cerrar el Modal de Trivia/Acción (Nivel 1 y 3)
   function closeModal(resultType, pointsAwarded = 0) { 
     if (modalTimerInterval) { clearInterval(modalTimerInterval); modalTimerInterval = null; }
     modal.classList.add('hidden');
@@ -264,24 +292,122 @@
     
     updateHUD();
   }
+  
+  // 🛑 NUEVA FUNCIÓN: Cerrar el Modal de Emparejamiento (Nivel 2)
+  function closeMatchModal(resultType, pointsAwarded = 0) {
+      matchModal.classList.add('hidden');
+      matchResultsBox.classList.add('hidden'); 
+      matchResultsBox.classList.remove('active'); // Remover bloqueo de clics
+      state.paused = false;
+
+      if (resultType === 'correct') {
+          state.score += pointsAwarded;
+          playAudio('audio_correct');
+          displayFeedback(`¡Don viralizado! (+${pointsAwarded} Puntos) 🎉`, 'correct');
+      } else if (resultType === 'wrong') {
+          playAudio('audio_wrong');
+          displayFeedback("Esa no era la app correcta. ¡A estudiar los Dones! ❤️", 'wrong');
+      }
+
+      // Elimina el spirit
+      if (spiritToRemoveIndex !== -1) {
+          levels[state.currentLevel].spirits.splice(spiritToRemoveIndex, 1);
+          spiritToRemoveIndex = -1;
+      }
+      
+      // Limpia el estado 'flipped' y 'wrong' de todas las tarjetas para el próximo dilema
+      dilemmaCardsContainer.querySelectorAll('.don-card').forEach(card => {
+          card.classList.remove('flipped', 'wrong');
+      });
+
+      updateHUD();
+  }
+
 
   function openTrivia(questionObj, levelIndex, spiritIndex) {
     state.paused = true;
-    modal.classList.remove('hidden');
-    modalFeedback.textContent = '';
-    
     spiritToRemoveIndex = spiritIndex; 
     
     const qType = questionObj.type || 'trivia';
-    const isDilemma = qType === 'dilemma';
     const isAction = qType === 'action';
+    const isMatchDilemma = qType === 'match_dilemma'; // Nuevo tipo de Nivel 2
     
-    modalTitle.textContent = isAction 
-        ? `Reflexión - ${levels[levelIndex].name}`
-        : `Desafío - ${questionObj.title || levels[levelIndex].name}`;
-    
+    // 🛑 LÓGICA PARA NIVEL 2: DILEMA DE EMPAREJAMIENTO
+    if (isMatchDilemma) {
+        modal.classList.add('hidden'); 
+        matchModal.classList.remove('hidden');
+
+        matchTitle.textContent = `Dilema - ¿Qué Don te ayuda?`;
+        matchPrompt.textContent = questionObj.prompt;
+        dilemmaCardsContainer.innerHTML = '';
+        
+        // 1. Dibuja las 7 Tarjetas (Dones)
+        DONES_INICIALES.forEach(donInfo => {
+            const card = document.createElement('div');
+            card.className = 'don-card';
+            card.setAttribute('data-initial', donInfo.initial);
+            card.setAttribute('data-don', donInfo.don);
+            
+            // Reemplazar C2 con C visualmente
+            // ...
+            const donInitialKey = donInfo.initial; // S, I, C, F, P, T, C2
+            const imagePath = ASSETS[`don_${donInitialKey}`];
+            
+            // Creación de la tarjeta con efecto flip
+            card.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-face card-front">
+                        <img src="${imagePath}" alt="Don ${donInfo.don}" style="max-width: 90%; max-height: 90%; object-fit: contain;">
+                    </div>
+                    <div class="card-face card-back">${donInfo.don}: ${questionObj.correct_phrase}</div>
+                </div>
+            `;
+            // ...
+            
+            card.onclick = (e) => {
+                // Bloquea clics si ya se mostraron los resultados
+                if (matchResultsBox.classList.contains('active')) return;
+                
+                const selectedInitial = card.getAttribute('data-initial');
+
+                if (selectedInitial === questionObj.initial) {
+                    // CORRECTO
+                    card.classList.add('flipped');
+                    matchFeedbackMessage.textContent = `¡Correcto! Don: ${questionObj.don} 🎉`;
+                    matchCorrectPhrase.textContent = `Acción de Valor Alto: ${questionObj.correct_phrase}`;
+                    matchFeedbackMessage.style.color = '#6ee7b7';
+                    
+                    matchResultsBox.classList.remove('hidden');
+                    matchResultsBox.classList.add('active'); // Bloquear más clics
+                    closeMatchModalBtn.onclick = () => closeMatchModal('correct', questionObj.points || 20);
+
+                } else {
+                    // INCORRECTO
+                    card.classList.add('wrong');
+                    matchFeedbackMessage.textContent = `Incorrecto. Este dilema pertenece al Don ${questionObj.don}.`;
+                    matchCorrectPhrase.textContent = `Acción de Valor Alto: ${questionObj.correct_phrase}`;
+                    matchFeedbackMessage.style.color = '#ff6b6b';
+                    
+                    matchResultsBox.classList.remove('hidden');
+                    matchResultsBox.classList.add('active');
+                    
+                    // Muestra el Don correcto volteándolo
+                    const correctCard = dilemmaCardsContainer.querySelector(`[data-initial="${questionObj.initial}"]`);
+                    if(correctCard) correctCard.classList.add('flipped');
+                    
+                    closeMatchModalBtn.onclick = () => closeMatchModal('wrong', 0);
+                }
+            };
+            dilemmaCardsContainer.appendChild(card);
+        });
+        
+        return; // Sale de openTrivia
+    } 
+
     // Lógica para RETO DE ACCIÓN (Nivel 3)
     if (isAction) {
+        modal.classList.remove('hidden');
+        matchModal.classList.add('hidden'); 
         modalQuestion.textContent = questionObj.prompt || 'Reto de Acción';
         modalChoices.innerHTML = `<div class='choice selected action-message'>${questionObj.message}</div>`;
         submitAnswerBtn.textContent = "¡Entendido!";
@@ -293,8 +419,14 @@
         };
         return;
     }
-
-    // Lógica para DILEMA/TRIVIA/MATCHING (Nivel 1 y 2)
+    
+    // Lógica para TRIVIA (Nivel 1)
+    modal.classList.remove('hidden');
+    matchModal.classList.add('hidden'); 
+    
+    const isDilemma = qType === 'dilemma'; 
+    
+    modalTitle.textContent = `Desafío - ${questionObj.title || levels[levelIndex].name}`;
     modalQuestion.textContent = questionObj.question || questionObj.prompt || "Desafío Pendiente";
     modalChoices.innerHTML = '';
     let selectedIndex = -1;
@@ -303,13 +435,13 @@
     questionObj.choices.forEach((c, idx) => {
         const btn = document.createElement('div');
         btn.className = 'choice';
-        btn.textContent = isDilemma || qType === 'match' ? c.text : c; 
+        btn.textContent = c.text || c; 
         
         btn.addEventListener('click', ()=> {
             [...modalChoices.children].forEach(ch => ch.classList.remove('selected'));
             btn.classList.add('selected');
             selectedIndex = idx;
-            if (isDilemma || qType === 'match') {
+            if (isDilemma) {
                 selectedPoints = c.points !== undefined ? c.points : (c.correct ? 10 : 0);
             }
         });
@@ -339,7 +471,7 @@
 
     submitAnswerBtn.onclick = () => {
         if (selectedIndex >= 0) {
-            if (isDilemma || qType === 'match') {
+            if (isDilemma) {
                 if (selectedPoints > 0) {
                     const resultType = selectedPoints === 10 ? 'correct' : 'partial';
                     closeModal(resultType, selectedPoints);
@@ -429,7 +561,7 @@
   }
 
   // ----------------------------------------------------------------------------------
-  // BU CLE PRINCIPAL DEL JUEGO (Game Loop)
+  // BUCLE PRINCIPAL DEL JUEGO (Game Loop)
   // ----------------------------------------------------------------------------------
   function loop(ts) { 
       const dt = Math.min(0.05, (ts - lastTime) / 1000);
@@ -454,7 +586,6 @@
         if (feedback.timer <= 0 && feedback.type !== 'level') {
             state.paused = false; 
         }
-        if (feedback.type !== 'level' && !modal.classList.contains('hidden')) return; 
         if (feedback.type === 'level') return; 
     }
     
@@ -471,7 +602,7 @@
       player.vy = player.jumpSpeed;
       player.onGround = false;
       player.facing = 'hand';
-      playAudio('audio_jump'); // 🔊 AUDIO: Salto
+      playAudio('audio_jump'); 
     }
 
     player.vy += 1500 * dt; // Gravedad
@@ -480,7 +611,6 @@
 
     // Clamp player position
     if (player.x < 0) player.x = 0;
-    // 🛑 CRÍTICO: El límite se ajusta al nuevo WORLD_WIDTH
     if (player.x + player.w > WORLD_WIDTH) player.x = WORLD_WIDTH - player.w;
     if (player.y > canvas.height) {
       player.x = 40; player.y = 460; player.vy = 0; 
@@ -489,7 +619,7 @@
     const level = levels[state.currentLevel];
     player.onGround = false;
     
-    // Colisión con plataformas (lógica sin cambios)
+    // Colisión con plataformas 
     const previousY = player.y - player.vy * dt;
     for (const p of level.platforms) {
       const plat = {x:p.x,y:p.y,w:p.w,h:p.h};
@@ -535,7 +665,6 @@
     // Lógica de la Cámara (Scroll)
     cameraX = player.x - VIEWPORT_WIDTH / 2;
     if (cameraX < 0) cameraX = 0;
-    // 🛑 CRÍTICO: El límite de la cámara se ajusta al nuevo WORLD_WIDTH
     if (WORLD_WIDTH > VIEWPORT_WIDTH) {
         if (cameraX > WORLD_WIDTH - VIEWPORT_WIDTH) cameraX = WORLD_WIDTH - VIEWPORT_WIDTH;
     } else {
@@ -553,22 +682,15 @@
     const bgKey = level.bgKey; 
     const bgImg = IMAGES[bgKey];
     
-    // Dibuja el fondo sin estirarlo más allá de su ancho (1280px)
     if (bgImg) {
-      // Dibuja la parte de 900x600 de la imagen de 1280x720. 
-      // Si la imagen es 720 de alto, la estamos estirando ligeramente a 600, 
-      // pero el ancho será 1:1, evitando la pixelación.
       ctx.drawImage(bgImg, cameraX, 0, VIEWPORT_WIDTH, canvas.height, 
                     0, 0, VIEWPORT_WIDTH, canvas.height);
     } else {
-      // Fallback
       const gradient = ctx.createLinearGradient(0,0,0,canvas.height);
       gradient.addColorStop(0,'#6dd3ff22'); gradient.addColorStop(1,'#ffd16611');
       ctx.fillStyle = gradient;
       ctx.fillRect(0,0,VIEWPORT_WIDTH,canvas.height);
     }
-    
-    // ... (El resto del código render() permanece igual)
     
     ctx.save();
     ctx.translate(-cameraX, 0); 
@@ -637,8 +759,6 @@
   }
   
 
-  // ... (El resto del código de Eventos, Controles e Inicialización permanece igual) ...
-  
   // ----------------------------------------------------------------------------------
   // MANEJO DE EVENTOS (Input Handling)
   // ----------------------------------------------------------------------------------
@@ -658,7 +778,7 @@
     }
   });
 
-  // Controles Móviles (Touch) - Unificado con pointer events
+  // Controles Móviles (Touch) 
   const setMobileControl = (btn, state) => {
       if (btn === leftBtn) mobileLeft = state;
       else if (btn === rightBtn) mobileRight = state;
@@ -707,13 +827,11 @@
     }
   });
 
-  // Muestra las instrucciones
   howtoBtn.addEventListener('click', ()=>{ 
       howtoScreen.classList.remove('hidden'); 
       menu.classList.add('hidden');
   });
 
-  // Cierra las instrucciones y regresa al menú
   closeHowto.addEventListener('click', ()=>{ 
       howtoScreen.classList.add('hidden'); 
       menu.classList.remove('hidden'); 

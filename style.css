@@ -3,480 +3,446 @@
    ====================================================================== */
 
    :root {
-    --bg: #0f1720;
-    --panel: #0b1220;
-    --accent: #ff6b6b;
-    --accent-2: #ffd166;
-    --muted: #9aa4b2;
-    --glass: rgba(255, 255, 255, 0.04);
-  
-    --font-game: "Press Start 2P", "Rubik", system-ui, sans-serif;
-    --font-social: "Inter", sans-serif;
-  }
-  
-  * {
+    --bg: #0f1720; /* Fondo principal oscuro */
+    --panel: #0b1220; /* Color de paneles y modales */
+    --accent: #ff6b6b; /* Rojo/Rosa vibrante para Primary */
+    --accent-2: #ffd166; /* Amarillo/Dorado para HUD y Títulos */
+    --muted: #9aa4b2; /* Gris tenue */
+    --glass: rgba(255, 255, 255, 0.08); /* Efecto vidrio/transparencia */
+    --glass-border: rgba(255, 255, 255, 0.2); 
+ 
+    --font-game: "Press Start 2P", system-ui, sans-serif;
+    --font-text: "Arial", sans-serif; 
+ }
+ 
+ * {
     box-sizing: border-box;
-  }
-  
-  html,
-  body,
-  #app {
+ }
+ 
+ html,
+ body {
     height: 100%;
     margin: 0;
     background: linear-gradient(180deg, #06101a 0%, var(--bg) 100%);
     color: #edf2f7;
-    font-family: var(--font-game);
-  }
-  
-  .centered {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .hidden {
-    display: none !important;
-    pointer-events: none !important;
-  }
-  
-  .visible {
-    display: flex;
-  }
-  
-  
-  
-  /* ======================================================================
-     1. MENÚ PRINCIPAL
-     ====================================================================== */
-  
-  #menu {
-    padding: 24px;
-    gap: 16px;
-    text-align: center;
-    z-index: 10;
-  }
-  
-  #logo {
-    width: 180px;
-    margin-bottom: 8px;
-  }
-  
-  h1 {
-    font-family: "Press Start 2P", monospace;
-    color: var(--accent-2);
+    font-family: var(--font-text); 
+    overflow: hidden; 
+ }
+ 
+ /* Estilos de Utilidad */
+ .hidden {
+     display: none !important;
+ }
+ 
+ /* --- CONTENEDOR PRINCIPAL DEL JUEGO (Marco) --- */
+ #game-container {
+     width: 900px; 
+     height: 600px;
+     margin: 50px auto;
+     border: 5px solid var(--accent-2); 
+     box-shadow: 0 0 20px rgba(255, 209, 102, 0.5);
+     position: relative;
+     overflow: hidden;
+     background-color: var(--bg);
+     display: flex; 
+     flex-direction: column;
+     align-items: center;
+     justify-content: center;
+ }
+ 
+ 
+ /* ======================================================================
+    1. PANTALLAS (MENÚ, HOWTO, END)
+    ====================================================================== */
+ 
+ .screen {
+     position: absolute;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     justify-content: center;
+     background-color: rgba(6, 16, 26, 0.95); 
+     z-index: 100;
+     text-align: center;
+     padding: 24px;
+     gap: 16px;
+ }
+ 
+ /* ESTILO DE LA IMAGEN DEL LOGO EN EL MENÚ (Si existe) */
+ #logo {
+     width: 120px; 
+     height: auto;
+     margin-bottom: 20px; 
+ }
+ 
+ /* ESTILO DEL TÍTULO GRANDE (Estilo retro/inicio) */
+ h1 {
+    font-family: var(--font-game); 
+    color: var(--accent-2); 
     text-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-    margin: 0;
-  }
-  
-  .menu-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 12px;
-  }
-  
-  
-  
-  /* ======================================================================
-     2. BOTONES
-     ====================================================================== */
-  
-  button {
+    margin: 0 0 10px 0;
+    font-size: 2.2rem;
+ }
+ h2 {
+     font-family: var(--font-game);
+     color: var(--accent-2);
+ }
+ 
+ /* ======================================================================
+    2. BOTONES
+    ====================================================================== */
+ 
+ button {
     cursor: pointer;
     border: 0;
     padding: 12px 18px;
     border-radius: 10px;
     font-weight: 600;
-    transition: transform 0.1s, box-shadow 0.1s;
-  }
-  
-  .primary {
-    background: linear-gradient(90deg, var(--accent), #ff9a9a);
-    color: #071018;
-    box-shadow: 0 6px 18px rgba(255, 107, 107, 0.18);
-  }
-  
-  .secondary {
-    background: var(--glass);
-    color: var(--muted);
-    border: 1px solid rgba(255, 255, 255, 0.04);
-  }
-  
-  button:active {
+    transition: transform 0.1s, box-shadow 0.1s, opacity 0.2s;
+    font-family: var(--font-game);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+ }
+ 
+ /* Botón Principal (Iniciar) */
+ .primary, #start-game, #submit-post {
+     background: linear-gradient(90deg, var(--accent), #ff9a9a);
+     color: #071018;
+     box-shadow: 0 6px 18px rgba(255, 107, 107, 0.38);
+     margin-top: 10px;
+ }
+ 
+ /* Botones Secundarios (Cómo jugar, etc.) */
+ .secondary, #how-to, #close-howto, #close-match-modal, #replay, #skip-answer, #pause-btn {
+     background: var(--glass);
+     color: var(--muted);
+     border: 1px solid rgba(255, 255, 255, 0.08);
+ }
+ 
+ /* Botón de Enviar (dentro del modal) */
+ #submit-answer {
+     background-color: #2ecc71; 
+     color: var(--panel);
+ }
+ 
+ button:hover {
+     opacity: 0.9;
+ }
+ button:active {
     transform: translateY(2px);
-  }
-  
-  
-  
-  /* ======================================================================
-     3. CANVAS DE JUEGO
-     ====================================================================== */
-  
-  #game-screen {
-    padding: 8px;
-  }
-  
-  #game-container {
-    position: relative;
-    max-width: 1100px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: center;
-  }
-  
-  canvas {
-    background: linear-gradient(180deg, #6dd3ff22, #ffd16611);
-    border-radius: 12px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
-    width: 100%;
-    height: auto;
-    max-height: 80vh;
-  }
-  
-  
-  
-  /* ======================================================================
-     4. HUD
-     ====================================================================== */
-  
-  #hud {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-  
-  #level-label {
-    color: var(--accent-2);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+ }
+ 
+ 
+ /* ======================================================================
+    3. CANVAS Y HUD
+    ====================================================================== */
+ 
+ #game-canvas {
+     display: block;
+     background-color: black;
+ }
+ 
+ #hud {
+     position: absolute;
+     top: 0;
+     left: 0;
+     width: 100%;
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     padding: 10px 20px;
+     background: rgba(0, 0, 0, 0.6);
+     z-index: 10;
+     box-sizing: border-box;
+     font-family: var(--font-game);
+     font-size: 10px;
+ }
+ 
+ #score {
     font-size: 14px;
-  }
-  
-  #score {
-    font-size: 16px;
     font-weight: 700;
-  }
-  
-  
-  
-  /* ======================================================================
-     5. MODALES GENERALES
-     ====================================================================== */
-  
-  .modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(2, 6, 23, 0.55);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    z-index: 9999;
-  }
-  
-  .modal-content {
-    background: linear-gradient(180deg, #071018, #08212a);
-    padding: 18px;
-    border-radius: 12px;
-    min-width: 280px;
-    max-width: 700px;
-    color: #e6f7ff;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
-  }
-  
-  /* SIN fondo cuando está el celular */
-  .phone-frame + .modal-content {
-    background: transparent !important;
-    box-shadow: none !important;
-    border: 0 !important;
-  }
-  
-  .choice {
-    background: rgba(255, 255, 255, 0.03);
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.03);
-    cursor: pointer;
-  }
-  
-  .choice.selected {
-    background: linear-gradient(90deg, #6ee7b732, #60a5fa33);
-    border-color: #6ee7b766;
-  }
-  
-  .timer {
-    margin-top: 8px;
-    color: var(--accent-2);
-    font-weight: 700;
-  }
-  
-  #final-post {
-    width: 100%;
-    height: 120px;
-    border-radius: 8px;
-    padding: 10px;
-    background: #071318;
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    color: #fff;
-    resize: vertical;
-  }
-  
-  
-  
-  /* ======================================================================
-     6. CONTROLES MÓVILES
-     ====================================================================== */
-  
-  /* ======================================================================
-   6. CONTROLES MÓVILES (ERGONÓMICOS Y TRANSPARENTES)
-   ====================================================================== */
-
-  #mobile-controls {
-    position: absolute;
-    bottom: 20px; /* Un poco separados del borde inferior */
-    left: 0;
-    width: 100%;
-    height: 0; /* Altura 0 para no bloquear clicks en el centro de la pantalla */
-    display: flex;
-    justify-content: space-between; /* Empuja los grupos a los extremos */
-    padding: 0 24px; /* Margen lateral para que no estén pegados al borde */
-    z-index: 20;
-    pointer-events: none; /* IMPORTANTE: Permite ver y tocar el juego en el centro */
-  }
-
-  /* Grupos de botones (Izquierda y Derecha) */
-  .controls-group {
-    display: flex;
-    gap: 16px; /* Espacio entre botones del mismo grupo */
-    pointer-events: auto; /* Reactiva el tacto solo en los botones */
-    align-items: flex-end; /* Alinea los botones abajo */
-  }
-
-  /* Estilo de los Botones (Efecto Cristal) */
-  .ctl {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%; /* Botones redondos son mejores al tacto */
-    
-    /* Efecto Transparente y Borroso */
-    background: rgba(255, 255, 255, 0.15); 
-    backdrop-filter: blur(4px); /* Difumina lo que hay detrás */
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 24px;
-    
-    /* Sombras suaves para visibilidad */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    
-    /* Eliminar estilos por defecto */
-    margin: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    
-    /* Mejora la respuesta táctil */
-    touch-action: manipulation; 
-    transition: transform 0.1s, background 0.1s;
-  }
-
-  /* Efecto al presionar */
-  .ctl:active {
-    background: rgba(255, 255, 255, 0.3);
-    transform: scale(0.95);
-  }
-
-  /* Ajustes específicos para pantallas pequeñas */
-  @media (max-width: 720px) {
-    #mobile-controls {
-      bottom: 12px;
-      padding: 0 12px;
-    }
-    
-    .ctl {
-      width: 58px;
-      height: 58px;
-      font-size: 20px;
-    }
-  }
-  
-  
-  
-  /* ======================================================================
-     7. FOOTER
-     ====================================================================== */
-  
-  footer {
-    position: fixed;
-    bottom: 10px;
-    left: 0;
-    right: 0;
-    text-align: center;
-    font-size: 12px;
-    color: var(--muted);
-  }
-  
-  
-  
-  /* ======================================================================
-     8. UI DE CELULAR (REDES SOCIALES)
-     ====================================================================== */
-  
-  .phone-frame {
-    background-image: url("src/Imagenes_L9/Vector_celular.png");
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-  
-    width: 100%;
-    max-width: 350px;
-    height: 700px;
-  
-    padding: 120px 35px 80px;
-  
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  
-    font-family: var(--font-social) !important;
-  }
-  
-  .phone-frame h2 {
-    font-size: 16px;
-  }
-  
-  .phone-frame p,
-  .phone-frame li {
-    font-size: 13px;
-  }
-  
-  .phone-frame button {
-    font-size: 12px !important;
-    padding: 8px 12px;
-  }
-  
-  #modal-choices .choice {
-    font-size: 13px;
-    padding: 8px;
-  }
-  
-  
-  /* HEADER ESTILO HISTORIA */
-  .phone-header {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-  }
-  
-  .phone-header .username {
-    font-size: 13px;
-    font-weight: 600;
-  }
-  
-  .phone-header .options {
-    font-size: 20px;
-    opacity: 0.9;
-  }
-  
-  
-  /* CONTENIDO */
-  .phone-body {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .phone-body .question {
-    font-size: 13px;
-    font-weight: 500;
-  }
-  
-  .phone-choice {
-    background: #ffffff10;
-    border: 1px solid #ffffff22;
-    padding: 8px 10px;
-    border-radius: 12px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  
-  .phone-choice:hover {
-    background: #ffffff33;
-  }
-  
-  .phone-timer {
-    font-size: 12px;
-    color: #ffdd57;
-    text-align: center;
-    margin-top: 6px;
-  }
-  
-  
-  /* BOTONES */
-  .social-buttons {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    margin-top: 10px;
-  }
-  
-  .btn-send {
-    background: linear-gradient(90deg, #ff5959, #ff3b3b);
-    border: none;
-    padding: 8px 18px;
-    border-radius: 20px;
     color: white;
-    font-size: 12px;
-    cursor: pointer;
-  }
-  
-  .btn-skip {
-    background: #ffffff22;
-    border: 1px solid #ffffff33;
-    padding: 7px 16px;
-    border-radius: 20px;
-    color: white;
-    font-size: 12px;
-    cursor: pointer;
-  }
-  
-  
-  
-  /* ======================================================================
-     9. RESPONSIVE
-     ====================================================================== */
-  
-  @media (max-width: 720px) {
-    #logo {
-      width: 110px;
-    }
-  
-    canvas {
-      max-height: 60vh;
-    }
-  
-    #menu {
-      padding: 12px;
-    }
-  
-    .menu-buttons {
-      gap: 8px;
-    }
-  
-    .primary {
-      padding: 10px;
-    }
-  
-    #mobile-controls {
-      left: 8px;
-      bottom: 8px;
-    }
-  }
-  
+ }
+ #level-label {
+     color: var(--accent-2);
+ }
+ 
+ 
+ /* ======================================================================
+    4. MODALES GENERALES (Trivia y Acción)
+    ====================================================================== */
+ 
+ .modal {
+     position: absolute;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     background-color: rgba(6, 16, 26, 0.9);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     z-index: 50;
+ }
+ 
+ .modal-content {
+     background: linear-gradient(180deg, #071018, #08212a);
+     padding: 30px;
+     border-radius: 12px;
+     width: 80%;
+     max-width: 600px;
+     color: #e6f7ff;
+     box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+     text-align: center;
+     font-family: var(--font-text);
+ }
+ 
+ #modal-choices {
+     margin: 20px 0;
+     display: flex;
+     flex-direction: column;
+     gap: 10px;
+ }
+ 
+ .choice, .action-message {
+     background: var(--glass);
+     padding: 10px;
+     border-radius: 8px;
+     border: 1px solid rgba(255, 255, 255, 0.08);
+     cursor: pointer;
+     transition: background-color 0.2s, border 0.2s;
+     font-size: 0.9rem;
+ }
+ 
+ .choice.selected {
+     background: linear-gradient(90deg, #6ee7b732, #60a5fa33);
+     border-color: #6ee7b766;
+ }
+ 
+ #modal-timer {
+     color: var(--accent); 
+     font-weight: bold;
+     margin-right: 15px;
+     font-family: var(--font-game);
+ }
+ 
+ #modal-footer {
+     display: flex;
+     justify-content: flex-end;
+     align-items: center;
+     gap: 10px;
+     margin-top: 15px;
+ }
+ 
+ #final-post {
+     width: 100%;
+     height: 120px;
+     border-radius: 8px;
+     padding: 10px;
+     background: #071318;
+     border: 1px solid rgba(255, 255, 255, 0.04);
+     color: #fff;
+     resize: vertical;
+     font-family: var(--font-text);
+ }
+ 
+ 
+ /* ======================================================================
+    5. MODAL DE MATCHING (Nivel 2 - Dones - ESTILO DE TEXTO VERDE/OSCURO)
+    ====================================================================== */
+ 
+ .match-prompt-text {
+     font-size: 1.1rem;
+     margin-bottom: 20px;
+     color: var(--accent-2); 
+ }
+ 
+ #dilemma-cards {
+     display: flex;
+     flex-wrap: wrap;
+     justify-content: center;
+     gap: 15px; 
+     perspective: 1000px;
+ }
+ 
+ .don-card {
+     width: 120px; 
+     height: 150px; 
+     cursor: pointer;
+     background: transparent;
+     border-radius: 10px;
+     border: 3px solid #005f73;
+     position: relative;
+ }
+ 
+ .card-inner {
+     position: relative;
+     width: 100%;
+     height: 100%;
+     text-align: center;
+     transition: transform 0.8s;
+     transform-style: preserve-3d;
+ }
+ 
+ .don-card.flipped .card-inner {
+     transform: rotateY(180deg);
+ }
+ 
+ .card-face {
+     position: absolute;
+     width: 100%;
+     height: 100%;
+     -webkit-backface-visibility: hidden;
+     backface-visibility: hidden;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     border-radius: 7px;
+     padding: 5px;
+     box-sizing: border-box;
+ }
+ 
+ .card-front {
+     background-color: var(--panel); 
+     color: white;
+ }
+ .don-card img {
+     width: 100%;
+     height: 100%;
+     object-fit: contain; 
+ }
+ 
+ /* ESTILO ACTUALIZADO DE LA CARA POSTERIOR (TEXTO) */
+ .card-back {
+     background-color: #6200EE; /* Verde sólido brillante */
+     color: #ffffff; /* Texto oscuro para alto contraste */
+     transform: rotateY(180deg);
+     font-size: 12px; 
+     line-height: 1.3;
+     padding: 8px;
+     align-items: center; 
+     text-align: center; 
+     font-family: var(--font-text); 
+     font-weight: 600; 
+ }
+ 
+ .don-card.wrong {
+     border-color: var(--accent); 
+     opacity: 0.7;
+ }
+ .don-card.wrong .card-front {
+      background-color: #B00020; 
+ }
+ 
+ .match-results-box {
+     margin-top: 20px;
+     padding: 15px;
+     background: rgba(0, 0, 0, 0.4);
+     border-radius: 8px;
+ }
+ 
+ #match-feedback-message {
+     color: #6ee7b7;
+     font-weight: bold;
+     font-family: var(--font-game);
+     font-size: 0.8rem;
+ }
+ #match-correct-phrase {
+     color: white;
+     font-size: 0.9rem;
+     margin-top: 8px;
+     line-height: 1.4;
+ }
+ 
+ 
+ /* ======================================================================
+    6. CONTROLES MÓVILES (AJUSTADOS)
+    ====================================================================== */
+ 
+ #mobile-controls {
+     position: absolute;
+     bottom: 20px; 
+     left: 0;
+     width: 100%;
+     height: 0; 
+     display: flex;
+     /* Distribución: Empuja los grupos a los extremos */
+     justify-content: space-between; 
+     padding: 0 24px; 
+     z-index: 20;
+     pointer-events: none; 
+     align-items: flex-end; 
+ }
+ 
+ /* Define cómo se ven los grupos (para agrupar adelante y atrás) */
+ .controls-group {
+     display: flex;
+     gap: 12px; /* Espacio reducido para juntar adelante/atrás */
+     pointer-events: auto; 
+     align-items: flex-end;
+ }
+ 
+ /* Estilo visual del botón táctil (.ctl) */
+ .ctl {
+     width: 64px;
+     height: 64px;
+     border-radius: 50%; 
+     background: rgba(255, 255, 255, 0.15); 
+     backdrop-filter: blur(4px); 
+     border: 2px solid rgba(255, 255, 255, 0.3);
+     color: rgba(255, 255, 255, 0.8);
+     font-size: 24px;
+     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+     margin: 0;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     
+     pointer-events: auto; 
+     touch-action: manipulation; 
+     transition: transform 0.1s, background 0.1s;
+ }
+ 
+ /* Estilo activo al presionar */
+ .ctl:active {
+     background: rgba(255, 255, 255, 0.3);
+     transform: scale(0.95);
+ }
+ 
+ /* ======================================================================
+    7. RESPONSIVE
+    ====================================================================== */
+ @media (max-width: 720px) {
+     #game-container {
+         width: 100%;
+         height: 100%;
+         margin: 0;
+         border: none;
+         box-shadow: none;
+     }
+ 
+     #mobile-controls {
+         bottom: 12px;
+         padding: 0 12px;
+     }
+     
+     .ctl {
+         width: 58px;
+         height: 58px;
+         font-size: 20px;
+     }
+     
+     h1 {
+         font-size: 1.5rem;
+     }
+     
+     button {
+         padding: 10px 15px;
+         font-size: 0.7rem;
+     }
+ }
