@@ -1,4 +1,4 @@
-// src/game.js - Versión final con Nivel 3 (Encounter/Fake News)
+// src/game.js - Versión final con Nivel 3 (Encounter/Fake News), correcciones de input, audio intro al clic, PAUSA operativa, y reanudación más rápida.
 
 (() => {
   // 📐 Variables de Configuración
@@ -17,7 +17,7 @@
   const gameScreen = document.getElementById('game-screen');
   const scoreEl = document.getElementById('score');
   const levelLabel = document.getElementById('level-label');
-  const pauseBtn = document.getElementById('pause-btn');
+  const pauseBtn = document.getElementById('pause-btn'); // 🎯 Botón de Pausa
   const modal = document.getElementById('modal');
   const modalTitle = document.getElementById('modal-title');
   const modalQuestion = document.getElementById('modal-question');
@@ -48,7 +48,7 @@
   const closeMatchModalBtn = document.getElementById('close-match-modal');
 
 
-  // --- AUDIO Y RECURSOS (Mantenido)
+  // --- AUDIO Y RECURSOS
   const ASSETS = {
     // IMAGENES
     fondo_n1: 'src/Imagenes_L9/libro_9_fondos-01.png',
@@ -58,7 +58,18 @@
     player_front_hand: 'src/Imagenes_L9/Elias_frente_mano_levantada.png',
     player_right: 'src/Imagenes_L9/Elias_perfil_derecho.png',
     player_left: 'src/Imagenes_L9/Elias_perfll_izquierdo.png', 
-    spirit: 'src/Imagenes_L9/Espiritu_fuego.png',
+    
+    // SPIRITS Y NUBES (Coleccionables)
+    spirit: 'src/Imagenes_L9/Espiritu_fuego.png', // Spirit original
+    spiritt: 'src/Imagenes_L9/espiritu.png',     // Segundo Spirit
+    nube: 'src/Imagenes_L9/nube.png',           // Nube
+    
+    // PREGUNTAS (Nivel 3)
+    pregunta1: 'src/Imagenes_L9/pregunta1.png',
+    pregunta2: 'src/Imagenes_L9/pregunta2.png',
+    pregunta3: 'src/Imagenes_L9/pregunta3.png',
+    pregunta4: 'src/Imagenes_L9/pregunta4.png',
+
 
     don_S: 'src/Imagenes_L9/S.png', // Sabiduría
     don_I: 'src/Imagenes_L9/I.png', // Inteligencia
@@ -66,13 +77,14 @@
     don_F: 'src/Imagenes_L9/F.png', // Fortaleza
     don_P: 'src/Imagenes_L9/P.png', // Piedad
     don_T: 'src/Imagenes_L9/T.png', // Temor de Dios
-    don_C: 'src/Imagenes_L9/C.png', // Consejo (C2 para evitar conflicto con Ciencia)
+    don_C: 'src/Imagenes_L9/C.png', // Consejo
     
     // AUDIO (ASUMIMOS RUTAS MP3)
     audio_jump: 'src/Audio/jump.mp3', 
     audio_correct: 'src/Audio/correct.mp3',
-    audio_wrong: 'src/Audio/wrong.mp3',
-    audio_level_complete: 'src/Audio/level_complete.mp3',
+    audio_wrong: 'src/Audio/incorrect.mp3',
+    audio_level_complete: 'src/Audio/levelup.mp3',
+    audio_intro: 'src/Audio/intro.mp3', 
   };
   
   // 🛑 Array de iniciales de los Dones
@@ -85,6 +97,9 @@
     { initial: 'T', don: 'Temor de Dios' },
     { initial: 'C', don: 'Consejo' }, 
   ];
+
+  // Array de imágenes disponibles para niveles 1 y 2
+  const SPIRIT_ASSET_KEYS = ['spirit', 'spiritt', 'nube'];
 
 
   const IMAGES = {};
@@ -124,6 +139,36 @@
           clone.play().catch(e => console.warn("Audio play error:", e));
       }
   }
+
+  // 🛑 FUNCIONES DE MÚSICA DE FONDO 🛑
+  let backgroundMusic = null; // Variable para controlar la música de fondo
+
+  function playBackgroundMusic(key, loop = true) {
+      // 1. Detener la música anterior si existe
+      if (backgroundMusic) {
+          backgroundMusic.pause();
+          backgroundMusic.currentTime = 0;
+          backgroundMusic = null;
+      }
+      
+      // 2. Reproducir la nueva pista
+      if (AUDIO[key]) {
+          // Usar cloneNode para no afectar al Audio original cargado
+          backgroundMusic = AUDIO[key].cloneNode(); 
+          backgroundMusic.loop = loop;
+          backgroundMusic.volume = 0.5; // Volumen para la música de fondo
+          backgroundMusic.play().catch(e => console.warn("Background music play error:", e));
+      }
+  }
+
+  function stopBackgroundMusic() {
+      if (backgroundMusic) {
+          backgroundMusic.pause();
+          backgroundMusic.currentTime = 0;
+          backgroundMusic = null;
+      }
+  }
+  // 🛑 FIN FUNCIONES DE MÚSICA DE FONDO 🛑
 
   // game state
   let state = {
@@ -203,11 +248,11 @@
         {x:1100,y:320,w:140,h:20},
       ],
       spirits: [
-        {x:130,y:380,w:36,h:36, type: 'trivia', index: 0},
-        {x:340,y:320,w:36,h:36, type: 'trivia', index: 1},
-        {x:530,y:260,w:36,h:36, type: 'trivia', index: 2}, 
-        {x:730,y:380,w:36,h:36, type: 'trivia', index: 3}, 
-        {x:940,y:320,w:36,h:36, type: 'trivia', index: 4}, 
+        {x:130,y:380,w:36,h:36, type: 'trivia', index: 0, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]},
+        {x:340,y:320,w:36,h:36, type: 'trivia', index: 1, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]},
+        {x:530,y:260,w:36,h:36, type: 'trivia', index: 2, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]}, 
+        {x:730,y:380,w:36,h:36, type: 'trivia', index: 3, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]}, 
+        {x:940,y:320,w:36,h:36, type: 'trivia', index: 4, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]}, 
       ],
       flag: {x:1200,y:468,w:48,h:72} 
     },
@@ -225,13 +270,13 @@
         {x:1150,y:500,w:100,h:20}, // Consejo (Cercano a la meta)
       ],
       spirits: [
-        {x:120,y:420,w:36,h:36, type: 'match_dilemma', index: 0}, // Sabiduría
-        {x:320,y:360,w:36,h:36, type: 'match_dilemma', index: 1}, // Inteligencia
-        {x:500,y:300,w:36,h:36, type: 'match_dilemma', index: 2}, // Ciencia
-        {x:680,y:440,w:36,h:36, type: 'match_dilemma', index: 3}, // Fortaleza
-        {x:850,y:380,w:36,h:36, type: 'match_dilemma', index: 4}, // Piedad
-        {x:1050,y:320,w:36,h:36, type: 'match_dilemma', index: 5}, // Temor de Dios
-        {x:1200,y:460,w:36,h:36, type: 'match_dilemma', index: 6}, // Consejo
+        {x:120,y:420,w:36,h:36, type: 'match_dilemma', index: 0, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]}, // Sabiduría
+        {x:320,y:360,w:36,h:36, type: 'match_dilemma', index: 1, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]}, // Inteligencia
+        {x:500,y:300,w:36,h:36, type: 'match_dilemma', index: 2, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]}, // Ciencia
+        {x:680,y:440,w:36,h:36, type: 'match_dilemma', index: 3, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]}, // Fortaleza
+        {x:850,y:380,w:36,h:36, type: 'match_dilemma', index: 4, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]}, // Piedad
+        {x:1050,y:320,w:36,h:36, type: 'match_dilemma', index: 5, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]}, // Temor de Dios
+        {x:1200,y:460,w:36,h:36, type: 'match_dilemma', index: 6, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]}, // Consejo
       ],
       flag: {x:1200,y:468,w:48,h:72}
     },
@@ -248,10 +293,10 @@
         {x:1100,y:300,w:120,h:20},
       ],
       spirits: [
-        {x:120,y:420,w:36,h:36, type: 'encounter', index: 0}, 
-        {x:320,y:380,w:36,h:36, type: 'encounter', index: 1}, 
-        {x:540,y:320,w:36,h:36, type: 'encounter', index: 2}, 
-        {x:760,y:260,w:36,h:36, type: 'encounter', index: 3}, 
+        {x:120,y:420,w:36,h:36, type: 'encounter', index: 0, asset: 'pregunta1'}, 
+        {x:320,y:380,w:36,h:36, type: 'encounter', index: 1, asset: 'pregunta2'}, 
+        {x:540,y:320,w:36,h:36, type: 'encounter', index: 2, asset: 'pregunta3'}, 
+        {x:760,y:260,w:36,h:36, type: 'encounter', index: 3, asset: 'pregunta4'}, 
       ],
       flag: {x:1200,y:468,w:48,h:72}
     }
@@ -265,16 +310,17 @@
   function displayFeedback(message, type) {
       feedback.message = message;
       feedback.type = type; 
-      feedback.timer = (type === 'level') ? 3 : 1.5; 
+      // La pausa visual después de un evento de modal se gestiona dentro de closeModal/submitModalAnswer
+      feedback.timer = (type === 'level') ? 1.5 : 1; 
   }
   
   // Función para cerrar el Modal de Trivia/Encounter (Nivel 1 y 3)
   function closeModal(resultType, pointsAwarded = 0) { 
     if (modalTimerInterval) { clearInterval(modalTimerInterval); modalTimerInterval = null; }
     modal.classList.add('hidden');
-    state.paused = false;
+    state.paused = false; // Se reanuda el juego
     
-    // ⬅️ CORRECCIÓN: Limpiar el mensaje de feedback del modal al cerrar
+    // Limpiar el mensaje de feedback del modal al cerrar
     modalFeedback.textContent = ''; 
 
     if (resultType === 'correct' || resultType === 'partial') {
@@ -416,7 +462,7 @@
     modalFeedback.textContent = ''; // Limpiar feedback anterior
     submitAnswerBtn.textContent = "Enviar";
     
-    // ⬅️ CORRECCIÓN 1: Deshabilitar el botón de envío al abrir (excepto para Nivel 1 si usa solo choices)
+    // Deshabilitar el botón de envío al abrir (excepto para Nivel 1 si usa solo choices)
     submitAnswerBtn.disabled = true;
 
 
@@ -430,13 +476,12 @@
         modalTimer.classList.add('hidden'); // Ocultar timer
         skipAnswerBtn.classList.add('hidden'); // Ocultar skip
         submitAnswerBtn.textContent = "Confirmar";
-        submitAnswerBtn.disabled = true; // ⬅️ CORRECCIÓN: Asegurar deshabilitado para Nivel 3
+        submitAnswerBtn.disabled = true; // Asegurar deshabilitado para Nivel 3
 
 
         // Botón 'Verdad (Conexión Divina)'
         const btnTrue = document.createElement('button');
         btnTrue.textContent = 'Verdad (Conexión Divina)';
-        // ⬅️ CORRECCIÓN: Usar 'choice' y 'button' para Nivel 3 para facilitar el estilo y la deshabilitación
         btnTrue.className = 'choice encounter-choice';
         btnTrue.dataset.answer = 'true'; 
         modalChoices.appendChild(btnTrue);
@@ -490,7 +535,7 @@
             [...modalChoices.children].forEach(ch => ch.classList.remove('selected'));
             choice.classList.add('selected');
             
-            // ⬅️ CORRECCIÓN 2: Habilitar el botón de envío al hacer clic en cualquier opción
+            // Habilitar el botón de envío al hacer clic en cualquier opción
             submitAnswerBtn.disabled = false; 
 
             if (currentQuestion.type === 'encounter') {
@@ -539,7 +584,6 @@
 
       // Mostrar el resultado en el modal
       if (isCorrect) {
-          // ⬅️ CORRECCIÓN: El updateScore y el mensaje final deben ocurrir solo después de confirmar
           state.score += points;
           modalFeedback.textContent = 
               currentQuestion.type === 'encounter' ? 
@@ -555,12 +599,12 @@
       // Deshabilitar botones de opción para que no puedan cambiarla
       document.querySelectorAll('#modal-choices .choice').forEach(btn => btn.disabled = true);
 
-      // Cierra el modal después de 2 segundos
+      // Cierra el modal después de 1 segundo (REDUCIDO de 2000ms a 1000ms)
       setTimeout(() => {
           closeModal(resultType, points);
           // Re-habilitar botones para el próximo uso (aunque closeModal lo limpia, lo dejamos para la próxima apertura)
           document.querySelectorAll('#modal-choices .choice').forEach(btn => btn.disabled = false);
-      }, 2000); 
+      }, 1000); // ⬅️ CAMBIO: 1 segundo
   }
 
   // ----------------------------------------------------------------------
@@ -570,11 +614,12 @@
 
 
   function updateHUD(){ 
-      scoreEl.textContent = `Puntos: ${state.score}`; 
+      scoreEl.textContent = `Puntos: ${state.score}`;   
       levelLabel.textContent = `Nivel ${state.currentLevel+1}: ${levels[state.currentLevel].name}`; 
   }
 
   function startLevel(index) {
+      // stopBackgroundMusic(); // Esto se hace en startGame
       state.currentLevel = index;
       state.currentQuestionIndex = 0; 
       player = new Player(40, 460); 
@@ -595,6 +640,7 @@
     playAudio('audio_level_complete');
     displayFeedback(`¡Wow, has viralizado un mensaje de amor! NIVEL ${state.currentLevel + 1} COMPLETO! (+50 pts) 🏆`, 'level'); 
     
+    // REDUCIDO: Espera solo 1 segundo antes de pasar al siguiente nivel o reto final.
     setTimeout(() => {
         if (nextLevelIndex < levels.length) {
           startLevel(nextLevelIndex);
@@ -603,7 +649,7 @@
           openFinalChallenge();
         }
         updateHUD();
-    }, 3000); 
+    }, 1000); // ⬅️ CAMBIO: 1 segundo
   }
 
   function openFinalChallenge() {
@@ -647,6 +693,7 @@
       const dt = Math.min(0.05, (ts - lastTime) / 1000);
       lastTime = ts;
       
+      // La actualización solo ocurre si NO está en pausa
       if (!state.paused && state.running) { 
           update(dt);
       }
@@ -663,12 +710,17 @@
     // Manejo del Feedback (Pausa visual)
     if (feedback.timer > 0) {
         feedback.timer -= dt;
-        if (feedback.timer <= 0 && feedback.type !== 'level') {
+        // Solo reanudar automáticamente si NO es un feedback de cambio de nivel
+        if (feedback.timer <= 0 && feedback.type !== 'level') { 
             state.paused = false; 
+            feedback.message = null; // Limpiar mensaje de feedback
         }
-        if (feedback.type === 'level') return; 
+        if (feedback.type === 'level' && feedback.timer > 0) return; // Bloquea el movimiento durante el mensaje de nivel completo
     }
     
+    // Si state.paused fue seteado por el botón de pausa o un modal, sale aquí.
+    if (state.paused) return; 
+
     // Lógica de movimiento
     let moveLeft = keys['arrowleft'] || keys['a'] || mobileLeft;
     let moveRight = keys['arrowright'] || keys['d'] || mobileRight;
@@ -753,7 +805,7 @@
   }
 
   // ----------------------------------------------------------------------------------
-  // LÓGICA DE DIBUJO (Render) (Mantenido)
+  // LÓGICA DE DIBUJO (Render) 
   // ----------------------------------------------------------------------------------
   function render() {
     ctx.clearRect(0,0,VIEWPORT_WIDTH,canvas.height);
@@ -783,16 +835,34 @@
     for (const s of level.spirits) {
       const t = Date.now() / 200;
       ctx.save();
+      
+      // Aplicar destello blanco (halo) para todos
       ctx.globalAlpha = 0.9 + Math.sin(t) * 0.1;
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
       ctx.arc(s.x + s.w/2, s.y + s.h/2, Math.max(s.w,s.h), 0, Math.PI*2);
       ctx.fill();
       ctx.restore();
+      
+      // Determinar la imagen a usar
+      let spiritImg = null;
+      let assetKey = s.asset;
 
-      if (IMAGES.spirit) {
-        ctx.drawImage(IMAGES.spirit, s.x - 6, s.y - 6, s.w + 12, s.h + 12);
+      // Nivel 3 usa imágenes de preguntas (pregunta1, pregunta2, etc.)
+      if (state.currentLevel === 2) {
+          spiritImg = IMAGES[assetKey];
+      } 
+      // Nivel 1 y 2 usan combinación aleatoria (spirit, spiritt, nube)
+      else if (state.currentLevel === 0 || state.currentLevel === 1) {
+          spiritImg = IMAGES[assetKey]; 
+      }
+      
+      // Dibujar la imagen
+      if (spiritImg) {
+        // Dibujar con un pequeño margen para que se vea el destello
+        ctx.drawImage(spiritImg, s.x - 6, s.y - 6, s.w + 12, s.h + 12); 
       } else {
+        // Fallback si la imagen no existe
         ctx.fillStyle = '#ff6b6b';
         ctx.fillRect(s.x, s.y, s.w, s.h);
       }
@@ -820,132 +890,123 @@
       let color = '#ffffff';
       if (feedback.type === 'correct') color = '#6ee7b7'; 
       else if (feedback.type === 'wrong') color = '#ff6b6b'; 
-      else if (feedback.type === 'level') color = '#ffd166'; 
-      
-      ctx.fillStyle = color;
-      
-      const totalDuration = (feedback.type === 'level') ? 3 : 1.5;
-      const elapsed = totalDuration - feedback.timer;
-      const scale = 1 + 0.1 * Math.sin(elapsed * 10); 
-      
-      ctx.translate(VIEWPORT_WIDTH / 2, canvas.height / 2);
-      ctx.scale(scale, scale);
-      
-      ctx.fillText(feedback.message, 0, 0); 
+      else if (feedback.type === 'level') color = '#f9c74f';
 
+      ctx.fillStyle = color;
+      ctx.fillText(feedback.message, VIEWPORT_WIDTH / 2, canvas.height / 2);
       ctx.restore();
     }
-    
-  }
-  
+  } 
 
-  // ----------------------------------------------------------------------------------
-  // MANEJO DE EVENTOS (Input Handling) (Mantenido)
-  // ----------------------------------------------------------------------------------
-  
-  // Teclado
-window.addEventListener('keydown', (e) => {
-  const key = e.key.toLowerCase();
-  
-  // ⬅️ CORRECCIÓN: NO prevenir acciones de teclado si el foco está en un campo de texto (como el textarea del reto final).
-  const focusedElement = document.activeElement;
-  if (focusedElement === finalPost) {
-      // Permitir la entrada de texto normal si el usuario está escribiendo el post.
+  // ----------------------------------------------------------------------
+  // 🕹️ INICIALIZACIÓN Y MANEJO DE EVENTOS
+  // ----------------------------------------------------------------------
+
+  // Lógica de Pausa / Reanudar
+  pauseBtn.addEventListener('click', () => {
+    if (state.running && (modal && !modal.classList.contains('hidden') || matchModal && !matchModal.classList.contains('hidden'))) {
+      // No permitir la pausa si un modal de pregunta está abierto (ya está pausado)
       return; 
-  }
+    }
+    state.paused = !state.paused;
+    pauseBtn.textContent = state.paused ? '▶️ Reanudar' : '⏸ Pausa';
+    
+    if (state.paused) {
+        stopBackgroundMusic();
+    }
+  });
 
-  if (['arrowleft', 'arrowright', 'arrowup', 'a', 'd', 'w', ' '].includes(key)) {
-    keys[key] = true; 
-    e.preventDefault(); 
-  }
-});
-  window.addEventListener('keyup', (e) => {
+
+  document.addEventListener('keydown', (e) => {
     const key = e.key.toLowerCase();
-    if (['arrowleft', 'arrowright', 'arrowup', 'a', 'd', 'w', ' '].includes(key)) {
+    const isTyping =
+      e.target.tagName === 'INPUT' ||
+      e.target.tagName === 'TEXTAREA' ||
+      e.target.isContentEditable;
+  
+    // ✅ SI ESTÁ ESCRIBIENDO, NO BLOQUEAR TECLAS
+    if (isTyping) return;
+  
+    if (['arrowleft', 'arrowright', 'arrowup', 'w', 'a', 'd', ' '].includes(key)) {
+      keys[key] = true;
+      e.preventDefault(); 
+    }
+  
+    if (key === 'p') {
+      pauseBtn.click();
+    }
+  });
+  
+  document.addEventListener('keyup', (e) => {
+    const key = e.key.toLowerCase();
+    const isTyping =
+      e.target.tagName === 'INPUT' ||
+      e.target.tagName === 'TEXTAREA' ||
+      e.target.isContentEditable;
+  
+    if (isTyping) return;
+  
+    if (['arrowleft', 'arrowright', 'arrowup', 'w', 'a', 'd', ' '].includes(key)) {
       keys[key] = false;
     }
   });
 
-  // Controles Móviles (Touch) 
-  const setMobileControl = (btn, state) => {
-      if (btn === leftBtn) mobileLeft = state;
-      else if (btn === rightBtn) mobileRight = state;
-      else if (btn === jumpBtn) mobileJump = state;
-  };
-
-  [leftBtn, rightBtn, jumpBtn].forEach(btn => {
-      btn.addEventListener('pointerdown', (e) => { 
-          e.preventDefault(); 
-          setMobileControl(btn, true); 
-      });
-      
-      const release = (e) => { 
-          setMobileControl(btn, false); 
-      };
-      
-      btn.addEventListener('pointerup', release);
-      btn.addEventListener('pointercancel', release);
-      btn.addEventListener('pointerleave', release); 
-  });
+  // Controles Táctiles (Mobile)
+  leftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); mobileLeft = true; });
+  leftBtn.addEventListener('touchend', () => { mobileLeft = false; });
+  rightBtn.addEventListener('touchstart', (e) => { e.preventDefault(); mobileRight = true; });
+  rightBtn.addEventListener('touchend', () => { mobileRight = false; });
+  jumpBtn.addEventListener('touchstart', (e) => { e.preventDefault(); mobileJump = true; });
+  jumpBtn.addEventListener('touchend', () => { mobileJump = false; });
   
-  // ----------------------------------------------------------------------------------
-  // CONTROLES: START, HOWTO, CLOSE, PAUSE, REPLAY (Mantenido)
-  // ----------------------------------------------------------------------------------
-
+  // Función principal de inicio de juego
   function startGame() {
-      menu.classList.add('hidden');
-      gameScreen.classList.remove('hidden');
-      state.running = true;
-      state.score = 0;
-      state.badges = new Set();
-      startLevel(0);
-      lastTime = performance.now();
-      requestAnimationFrame(loop);
-  }
-
-  startBtn.addEventListener('click', startGame);
-
-  howtoBtn.addEventListener('click', () => {
     menu.classList.add('hidden');
-    howtoScreen.classList.remove('hidden');
-  });
-  
-  closeHowto.addEventListener('click', () => {
     howtoScreen.classList.add('hidden');
-    menu.classList.remove('hidden');
+    gameScreen.classList.remove('hidden');
+    endScreen.classList.add('hidden');
+    
+    // Reiniciar estado
+    state.running = true;
+    state.score = 0;
+    state.badges.clear();
+    
+    // Iniciar el primer nivel
+    startLevel(0);
+    
+    // Iniciar el loop principal
+    requestAnimationFrame(loop);
+  }
+  
+  // Manejo del flujo del juego al hacer clic en 'Empezar'
+  startBtn.addEventListener('click', () => {
+    // Reproducir la intro (la música de fondo se manejaría dentro de startLevel si fuera continua)
+    playAudio('audio_intro'); 
+    startGame();
   });
 
   replayBtn.addEventListener('click', () => {
     endScreen.classList.add('hidden');
     menu.classList.remove('hidden');
-    state.score = 0;
-    state.badges.clear();
-    startLevel(0); // Reinicia el nivel 0
-    // state.running permanece true
+    // La función startGame se encarga de re-iniciar todo
   });
-  
-  pauseBtn.addEventListener('click', () => {
-    state.paused = !state.paused;
-    pauseBtn.textContent = state.paused ? '▶' : '||';
-    if(state.paused) {
-        displayFeedback('Juego Pausado', 'pause');
-        if(modalTimerInterval) clearInterval(modalTimerInterval);
-    } else {
-        feedback.timer = 0; // Quita el mensaje de pausa
-        // Si el modal de trivia está abierto (solo en Nivel 1), reactivar timer
-        if(!modal.classList.contains('hidden') && state.currentLevel === 0) {
-            // No reactivamos el timer para simplificar, el jugador puede reintentar si se le acaba
-        }
-    }
-  });
-  
-  // Inicialización
-  function init() {
-    preloadResources(() => {
-        // Recursos cargados, iniciar UI.
-        menu.classList.remove('hidden');
-    });
-  }
 
-  window.addEventListener('load', init);
+  // Mostrar/Ocultar pantalla de ayuda
+  howtoBtn.addEventListener('click', () => {
+      menu.classList.add('hidden');
+      howtoScreen.classList.remove('hidden');
+  });
+  closeHowto.addEventListener('click', () => {
+      howtoScreen.classList.add('hidden');
+      menu.classList.remove('hidden');
+  });
+
+
+  // Pre-carga y espera a que los recursos estén listos
+  preloadResources(() => {
+    // Si la carga es exitosa, mostrar el menú
+    document.getElementById('loading').classList.add('hidden');
+    menu.classList.remove('hidden');
+  });
+
 })();
