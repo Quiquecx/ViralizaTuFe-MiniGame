@@ -63,6 +63,7 @@
     spirit: 'src/Imagenes_L9/Espiritu_fuego.png', // Spirit original
     spiritt: 'src/Imagenes_L9/espiritu.png',     // Segundo Spirit
     nube: 'src/Imagenes_L9/nube.png',           // Nube
+    celular: 'src/Imagenes_L9/FondoIndex.png',   // Celular (Nivel 2)
     
     // PREGUNTAS (Nivel 3)
     pregunta1: 'src/Imagenes_L9/pregunta1.png',
@@ -177,88 +178,94 @@
     currentLevel: 0,
     score: 0,
     badges: new Set(),
-    currentQuestionIndex: 0, 
+    currentQuestionIndex: 0,
+    reachedGoal: false // 🛑 NUEVA PROPIEDAD: True si el jugador toca la bandera
   };
-  
+
   // Variables globales
-  let player; 
+  let player;
   let lastTime = 0;
   let keys = {};
   let mobileLeft = false;
   let mobileRight = false;
   let mobileJump = false;
-  let cameraX = 0; 
+  let cameraX = 0;
   let feedback = {
-      message: null,
-      timer: 0,
-      type: null // 'correct', 'wrong', o 'level'
+    message: null,
+    timer: 0,
+    type: null // 'correct', 'wrong', o 'level'
   };
-  
+
   // 🛑 Variables del Modal (Trivia/Encounter)
   let currentQuestion = null;
   let currentSelection = null;
+  let spiritToRemoveIndex = -1; // Índice del espíritu a eliminar si la respuesta es correcta
 
   // Función de Detección de Colisión (Axis-Aligned Bounding Box)
   function aabb(box1, box2) {
     return box1.x < box2.x + box2.w &&
-           box1.x + box1.w > box2.x &&
-           box1.y < box2.y + box2.h &&
-           box1.y + box2.h > box2.y;
+      box1.x + box1.w > box2.x &&
+      box1.y < box2.y + box2.h &&
+      box1.y + box2.h > box2.y;
   }
 
   // Player Class (Mantenido)
   class Player {
-      constructor(x, y) {
-          this.x = x; this.y = y;
-          this.w = 52; this.h = 64;
-          this.vx = 0; this.vy = 0;
-          this.speed = 300; 
-          this.jumpSpeed = -600; 
-          this.onGround = false;
-          this.facing = 'front';
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+      this.w = 52;
+      this.h = 64;
+      this.vx = 0;
+      this.vy = 0;
+      this.speed = 300;
+      this.jumpSpeed = -600;
+      this.onGround = false;
+      this.facing = 'front';
+    }
+    draw(ctx) {
+      let img = null;
+      if (this.facing === 'left' && IMAGES.player_left) img = IMAGES.player_left;
+      else if (this.facing === 'right' && IMAGES.player_right) img = IMAGES.player_right;
+      else if (this.facing === 'hand' && IMAGES.player_front_hand) img = IMAGES.player_front_hand;
+      else if (IMAGES.player_front) img = IMAGES.player_front;
+
+      if (img) {
+        ctx.drawImage(img, this.x, this.y, this.w, this.h);
+      } else {
+        ctx.fillStyle = '#ffd166';
+        ctx.fillRect(this.x, this.y, this.w, this.h);
       }
-      draw(ctx) {
-          let img = null;
-          if (this.facing === 'left' && IMAGES.player_left) img = IMAGES.player_left;
-          else if (this.facing === 'right' && IMAGES.player_right) img = IMAGES.player_right;
-          else if (this.facing === 'hand' && IMAGES.player_front_hand) img = IMAGES.player_front_hand;
-          else if (IMAGES.player_front) img = IMAGES.player_front;
-    
-          if (img) {
-            ctx.drawImage(img, this.x, this.y, this.w, this.h);
-          } else {
-            ctx.fillStyle = '#ffd166';
-            ctx.fillRect(this.x, this.y, this.w, this.h);
-          }
-      }
+    }
   }
 
   // NIVELES (Mantenido)
+  // ... (Tu array de niveles 'levels' se mantiene sin cambios)
   const levels = [
     {
       name: "Stories",
-      bgKey: 'fondo_n1', 
+      bgKey: 'fondo_n1',
       platforms: [
-        {x:0,y:540,w:WORLD_WIDTH,h:60}, 
+        {x:0,y:540,w:WORLD_WIDTH,h:60},
         {x:100,y:440,w:140,h:20},
         {x:300,y:380,w:140,h:20},
         {x:500,y:320,w:140,h:20},
-        {x:700,y:440,w:140,h:20}, 
+        {x:700,y:440,w:140,h:20},
         {x:900,y:380,w:140,h:20},
         {x:1100,y:320,w:140,h:20},
       ],
       spirits: [
         {x:130,y:380,w:36,h:36, type: 'trivia', index: 0, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]},
         {x:340,y:320,w:36,h:36, type: 'trivia', index: 1, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]},
-        {x:530,y:260,w:36,h:36, type: 'trivia', index: 2, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]}, 
-        {x:730,y:380,w:36,h:36, type: 'trivia', index: 3, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]}, 
-        {x:940,y:320,w:36,h:36, type: 'trivia', index: 4, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]}, 
+        {x:530,y:260,w:36,h:36, type: 'trivia', index: 2, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]},
+        {x:730,y:380,w:36,h:36, type: 'trivia', index: 3, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]},
+        {x:940,y:320,w:36,h:36, type: 'trivia', index: 4, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]},
       ],
-      flag: {x:1200,y:468,w:48,h:72} 
+      flag: {x:1200,y:468,w:48,h:72, assetKey: 'celular'}
     },
     {
       name: "Reels",
-      bgKey: 'fondo_n2', 
+      bgKey: 'fondo_n2',
       platforms: [
         {x:0,y:540,w:WORLD_WIDTH,h:60},
         {x:100,y:460,w:140,h:20}, // Sabiduría
@@ -267,7 +274,7 @@
         {x:640,y:480,w:140,h:20}, // Fortaleza
         {x:820,y:420,w:140,h:20}, // Piedad
         {x:1000,y:360,w:140,h:20},// Temor de Dios
-        {x:1150,y:500,w:100,h:20}, // Consejo (Cercano a la meta)
+        {x:1050,y:500,w:100,h:20}, // Consejo (Cercano a la meta)
       ],
       spirits: [
         {x:120,y:420,w:36,h:36, type: 'match_dilemma', index: 0, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]}, // Sabiduría
@@ -276,13 +283,13 @@
         {x:680,y:440,w:36,h:36, type: 'match_dilemma', index: 3, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]}, // Fortaleza
         {x:850,y:380,w:36,h:36, type: 'match_dilemma', index: 4, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]}, // Piedad
         {x:1050,y:320,w:36,h:36, type: 'match_dilemma', index: 5, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]}, // Temor de Dios
-        {x:1200,y:460,w:36,h:36, type: 'match_dilemma', index: 6, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]}, // Consejo
+        {x:1100,y:460,w:36,h:36, type: 'match_dilemma', index: 6, asset: SPIRIT_ASSET_KEYS[Math.floor(Math.random() * SPIRIT_ASSET_KEYS.length)]}, // Consejo
       ],
-      flag: {x:1200,y:468,w:48,h:72}
+      flag: {x:1200,y:468,w:48,h:72, assetKey: 'celular'}
     },
     {
       name: "Post del Día",
-      bgKey: 'fondo_n3', 
+      bgKey: 'fondo_n3',
       platforms: [
         {x:0,y:540,w:WORLD_WIDTH,h:60},
         {x:100,y:460,w:120,h:20},
@@ -293,117 +300,124 @@
         {x:1100,y:300,w:120,h:20},
       ],
       spirits: [
-        {x:120,y:420,w:36,h:36, type: 'encounter', index: 0, asset: 'pregunta1'}, 
-        {x:320,y:380,w:36,h:36, type: 'encounter', index: 1, asset: 'pregunta2'}, 
-        {x:540,y:320,w:36,h:36, type: 'encounter', index: 2, asset: 'pregunta3'}, 
-        {x:760,y:260,w:36,h:36, type: 'encounter', index: 3, asset: 'pregunta4'}, 
+        {x:120,y:420,w:36,h:36, type: 'encounter', index: 0, asset: 'pregunta1'},
+        {x:320,y:380,w:36,h:36, type: 'encounter', index: 1, asset: 'pregunta2'},
+        {x:540,y:320,w:36,h:36, type: 'encounter', index: 2, asset: 'pregunta3'},
+        {x:760,y:260,w:36,h:36, type: 'encounter', index: 3, asset: 'pregunta4'},
       ],
-      flag: {x:1200,y:468,w:48,h:72}
+      flag: {x:1200,y:468,w:48,h:72, assetKey: 'celular'}
     }
   ];
 
   // --- Modal logic
   let modalTimerInterval = null;
   let questionsData = [window.GAME_QUESTIONS.level1, window.GAME_QUESTIONS.level2, window.GAME_QUESTIONS.level3];
-  let spiritToRemoveIndex = -1; 
 
-  function displayFeedback(message, type) {
-      feedback.message = message;
-      feedback.type = type; 
-      // La pausa visual después de un evento de modal se gestiona dentro de closeModal/submitModalAnswer
-      feedback.timer = (type === 'level') ? 1.5 : 1; 
+
+  function displayFeedback(message, type, duration = 1.5) { // 🛑 DEFAULT duration=1.5s
+    feedback.message = message;
+    feedback.type = type;
+    feedback.timer = (type === 'level') ? 3.5 : duration; // Nivel completado tiene 3.5s
   }
-  
-  // Función para cerrar el Modal de Trivia/Encounter (Nivel 1 y 3)
-  function closeModal(resultType, pointsAwarded = 0) { 
-    if (modalTimerInterval) { clearInterval(modalTimerInterval); modalTimerInterval = null; }
+
+  // ----------------------------------------------------------------------
+  // 🛑 FUNCIÓN MEJORADA: Cierre para Trivia/Encounter (Nivel 1 y 3)
+  // ----------------------------------------------------------------------
+  function closeModal(resultType, pointsAwarded = 0) {
+    if (modalTimerInterval) {
+      clearInterval(modalTimerInterval);
+      modalTimerInterval = null;
+    }
     modal.classList.add('hidden');
-    state.paused = false; // Se reanuda el juego
-    
-    // Limpiar el mensaje de feedback del modal al cerrar
-    modalFeedback.textContent = ''; 
+
+    // 🛑 IMPORTANTE: Solo reanudar el juego si NO es un éxito (la función de éxito lo reanuda después del delay)
+    if (resultType !== 'correct') {
+      state.paused = false;
+    }
+
+    modalFeedback.textContent = '';
 
     if (resultType === 'correct' || resultType === 'partial') {
-        state.score += pointsAwarded; 
-        const message = resultType === 'correct' 
-            ? `¡Genial! ¡El Espíritu Santo está contigo! (+${pointsAwarded} Puntos) 🎉`
-            : `¡Bien hecho! (+${pointsAwarded} Puntos) 🎉`;
-        playAudio('audio_correct');
-        displayFeedback(message, 'correct');
+      // 🛑 Los puntos y la eliminación del espíritu ahora se manejan *dentro* de submitModalAnswer
+      const message = resultType === 'correct' ?
+        `¡Genial! ¡El Espíritu Santo está contigo! (+${pointsAwarded} Puntos) 🎉` :
+        `¡Bien hecho! (+${pointsAwarded} Puntos) 🎉`;
+      playAudio('audio_correct');
+      displayFeedback(message, 'correct', 2.0); // Feedback más largo para acierto
     } else if (resultType === 'wrong') {
-        playAudio('audio_wrong');
-        displayFeedback("¡No te rindas! Escucha a tu corazón. ❤️", 'wrong'); 
+      // 🛑 Si es incorrecto, NO se suman puntos y NO se elimina el espíritu.
+      playAudio('audio_wrong');
+      displayFeedback("¡No te rindas! Escucha a tu corazón. ❤️", 'wrong', 2.0); // Feedback más largo para fallo
     }
-    
-    // Elimina el spirit
-    if (spiritToRemoveIndex !== -1) {
-        levels[state.currentLevel].spirits.splice(spiritToRemoveIndex, 1);
-        spiritToRemoveIndex = -1;
-    }
-    
+
+    // El espíritu se elimina si spiritToRemoveIndex fue seteado y la respuesta fue correcta
+    spiritToRemoveIndex = -1; // Resetear índice
     updateHUD();
   }
-  
-  // Función para cerrar el Modal de Emparejamiento (Nivel 2) (Mantenida)
+
+  // ----------------------------------------------------------------------
+  // 🛑 FUNCIÓN MEJORADA: Cierre para Emparejamiento (Nivel 2)
+  // ----------------------------------------------------------------------
   function closeMatchModal(resultType, pointsAwarded = 0) {
-      matchModal.classList.add('hidden');
-      matchResultsBox.classList.add('hidden'); 
-      matchResultsBox.classList.remove('active'); // Remover bloqueo de clics
-      state.paused = false;
+    matchModal.classList.add('hidden');
+    matchResultsBox.classList.add('hidden');
+    matchResultsBox.classList.remove('active');
+    state.paused = false; // El juego se reanuda inmediatamente
 
-      if (resultType === 'correct') {
-          state.score += pointsAwarded;
-          playAudio('audio_correct');
-          displayFeedback(`¡Don viralizado! (+${pointsAwarded} Puntos) 🎉`, 'correct');
-      } else if (resultType === 'wrong') {
-          playAudio('audio_wrong');
-          displayFeedback("Esa no era la app correcta. ¡A estudiar los Dones! ❤️", 'wrong');
-      }
+    if (resultType === 'correct') {
+      state.score += pointsAwarded;
+      playAudio('audio_correct');
+      displayFeedback(`¡Don viralizado! (+${pointsAwarded} Puntos) 🎉`, 'correct', 2.0);
 
-      // Elimina el spirit
+      // 🛑 ELIMINACIÓN: Solo si es correcto
       if (spiritToRemoveIndex !== -1) {
-          levels[state.currentLevel].spirits.splice(spiritToRemoveIndex, 1);
-          spiritToRemoveIndex = -1;
+        levels[state.currentLevel].spirits.splice(spiritToRemoveIndex, 1);
+        spiritToRemoveIndex = -1;
       }
-      
-      // Limpia el estado 'flipped' y 'wrong' de todas las tarjetas para el próximo dilema
-      dilemmaCardsContainer.querySelectorAll('.don-card').forEach(card => {
-          card.classList.remove('flipped', 'wrong');
-      });
+    } else if (resultType === 'wrong') {
+      // 🛑 NO ELIMINAR EL ESPÍRITU si es incorrecto
+      playAudio('audio_wrong');
+      displayFeedback("Esa no era la app correcta. ¡A estudiar los Dones! ❤️", 'wrong', 2.0);
+    }
 
-      updateHUD();
+    // Limpia el estado 'flipped' y 'wrong'
+    dilemmaCardsContainer.querySelectorAll('.don-card').forEach(card => {
+      card.classList.remove('flipped', 'wrong');
+    });
+
+    updateHUD();
   }
 
 
   function openTrivia(questionObj, levelIndex, spiritIndex) {
-    currentQuestion = questionObj; // Asignar la pregunta actual
-    currentSelection = null; // Reiniciar la selección
+    currentQuestion = questionObj;
+    currentSelection = null;
     state.paused = true;
-    spiritToRemoveIndex = spiritIndex; 
-    
-    const qType = questionObj.type || 'trivia';
-    const isMatchDilemma = qType === 'match_dilemma'; 
-    
-    //  LÓGICA PARA NIVEL 2: DILEMA DE EMPAREJAMIENTO (Mantenida)
-    if (isMatchDilemma) {
-        modal.classList.add('hidden'); 
-        matchModal.classList.remove('hidden');
+    spiritToRemoveIndex = spiritIndex; // Se almacena el índice aquí, pero solo se usa si acierta
 
-        matchTitle.textContent = `Dilema - ¿Qué Don te ayuda?`;
-        matchPrompt.textContent = questionObj.prompt;
-        dilemmaCardsContainer.innerHTML = '';
-        
-        // 1. Dibuja las 7 Tarjetas (Dones)
-        DONES_INICIALES.forEach(donInfo => {
-            const card = document.createElement('div');
-            card.className = 'don-card';
-            card.setAttribute('data-initial', donInfo.initial);
-            card.setAttribute('data-don', donInfo.don);
-            
-            const donInitialKey = donInfo.initial;
-            const imagePath = ASSETS[`don_${donInitialKey}`];
-            
-            card.innerHTML = `
+    const qType = questionObj.type || 'trivia';
+    const isMatchDilemma = qType === 'match_dilemma';
+
+    // LÓGICA PARA NIVEL 2: DILEMA DE EMPAREJAMIENTO (Mantenida)
+    if (isMatchDilemma) {
+      modal.classList.add('hidden');
+      matchModal.classList.remove('hidden');
+
+      matchTitle.textContent = `Dilema - ¿Qué Don te ayuda?`;
+      matchPrompt.textContent = questionObj.prompt;
+      dilemmaCardsContainer.innerHTML = '';
+
+      // 1. Dibuja las 7 Tarjetas (Dones)
+      DONES_INICIALES.forEach(donInfo => {
+        const card = document.createElement('div');
+        card.className = 'don-card';
+        card.setAttribute('data-initial', donInfo.initial);
+        card.setAttribute('data-don', donInfo.don);
+
+        const donInitialKey = donInfo.initial;
+        const imagePath = ASSETS[`don_${donInitialKey}`];
+
+        card.innerHTML = `
                 <div class="card-inner">
                     <div class="card-face card-front">
                         <img src="${imagePath}" alt="Don ${donInfo.don}" style="max-width: 90%; max-height: 90%; object-fit: contain;">
@@ -411,200 +425,223 @@
                     <div class="card-face card-back">${donInfo.don}: ${questionObj.correct_phrase}</div>
                 </div>
             `;
-            
-            card.onclick = (e) => {
-                if (matchResultsBox.classList.contains('active')) return;
-                
-                const selectedInitial = card.getAttribute('data-initial');
 
-                if (selectedInitial === questionObj.initial) {
-                    // CORRECTO
-                    card.classList.add('flipped');
-                    matchFeedbackMessage.textContent = `¡Correcto! Don: ${questionObj.don} 🎉`;
-                    matchCorrectPhrase.textContent = `Acción de Valor Alto: ${questionObj.correct_phrase}`;
-                    matchFeedbackMessage.style.color = '#6ee7b7';
-                    
-                    matchResultsBox.classList.remove('hidden');
-                    matchResultsBox.classList.add('active'); // Bloquear más clics
-                    closeMatchModalBtn.onclick = () => closeMatchModal('correct', questionObj.points || 20);
+        card.onclick = (e) => {
+          if (matchResultsBox.classList.contains('active')) return;
 
-                } else {
-                    // INCORRECTO
-                    card.classList.add('wrong');
-                    matchFeedbackMessage.textContent = `Incorrecto. Este dilema pertenece al Don ${questionObj.don}.`;
-                    matchCorrectPhrase.textContent = `Acción de Valor Alto: ${questionObj.correct_phrase}`;
-                    matchFeedbackMessage.style.color = '#ff6b6b';
-                    
-                    matchResultsBox.classList.remove('hidden');
-                    matchResultsBox.classList.add('active');
-                    
-                    const correctCard = dilemmaCardsContainer.querySelector(`[data-initial="${questionObj.initial}"]`);
-                    if(correctCard) correctCard.classList.add('flipped');
-                    
-                    closeMatchModalBtn.onclick = () => closeMatchModal('wrong', 0);
-                }
-            };
-            dilemmaCardsContainer.appendChild(card);
-        });
-        
-        return; // Sale de openTrivia
-    } 
-    
+          const selectedInitial = card.getAttribute('data-initial');
+
+          if (selectedInitial === questionObj.initial) {
+            // CORRECTO
+            card.classList.add('flipped');
+            matchFeedbackMessage.textContent = `¡Correcto! Don: ${questionObj.don} 🎉`;
+            matchCorrectPhrase.textContent = `Acción de Valor Alto: ${questionObj.correct_phrase}`;
+            matchFeedbackMessage.style.color = '#6ee7b7';
+
+            matchResultsBox.classList.remove('hidden');
+            matchResultsBox.classList.add('active'); // Bloquear más clics
+            closeMatchModalBtn.onclick = () => closeMatchModal('correct', questionObj.points || 20);
+
+          } else {
+            // INCORRECTO
+            card.classList.add('wrong');
+            matchFeedbackMessage.textContent = `Incorrecto. Este dilema pertenece al Don ${questionObj.don}.`;
+            matchCorrectPhrase.textContent = `Acción de Valor Alto: ${questionObj.correct_phrase}`;
+            matchFeedbackMessage.style.color = '#ff6b6b';
+
+            matchResultsBox.classList.remove('hidden');
+            matchResultsBox.classList.add('active');
+
+            const correctCard = dilemmaCardsContainer.querySelector(`[data-initial="${questionObj.initial}"]`);
+            if (correctCard) correctCard.classList.add('flipped');
+
+            closeMatchModalBtn.onclick = () => closeMatchModal('wrong', 0);
+          }
+        };
+        dilemmaCardsContainer.appendChild(card);
+      });
+
+      return;
+    }
+
     // Lógica para TRIVIA (Nivel 1) y ENCOUNTER (Nivel 3)
-    
+
     modal.classList.remove('hidden');
-    matchModal.classList.add('hidden'); 
-    
+    matchModal.classList.add('hidden');
+
     // Resetear elementos
     modalChoices.innerHTML = '';
     modalTimer.classList.remove('hidden');
     skipAnswerBtn.classList.remove('hidden');
-    modalFeedback.textContent = ''; // Limpiar feedback anterior
+    modalFeedback.textContent = '';
     submitAnswerBtn.textContent = "Enviar";
-    
-    // Deshabilitar el botón de envío al abrir (excepto para Nivel 1 si usa solo choices)
     submitAnswerBtn.disabled = true;
 
 
-    const isDilemma = qType === 'dilemma' || qType === 'trivia'; 
-    
     modalTitle.textContent = `Desafío - ${questionObj.title || levels[levelIndex].name}`;
     modalQuestion.textContent = questionObj.question || questionObj.prompt || "Desafío Pendiente";
-    
+
     // 🛑 LÓGICA ESPECÍFICA PARA ENCOUNTER (Nivel 3)
     if (qType === 'encounter') {
-        modalTimer.classList.add('hidden'); // Ocultar timer
-        skipAnswerBtn.classList.add('hidden'); // Ocultar skip
-        submitAnswerBtn.textContent = "Confirmar";
-        submitAnswerBtn.disabled = true; // Asegurar deshabilitado para Nivel 3
+      modalTimer.classList.add('hidden');
+      skipAnswerBtn.classList.add('hidden');
+      submitAnswerBtn.textContent = "Confirmar";
+      submitAnswerBtn.disabled = true;
 
 
-        // Botón 'Verdad (Conexión Divina)'
-        const btnTrue = document.createElement('button');
-        btnTrue.textContent = 'Verdad (Conexión Divina)';
-        btnTrue.className = 'choice encounter-choice';
-        btnTrue.dataset.answer = 'true'; 
-        modalChoices.appendChild(btnTrue);
+      // Botón 'Verdad (Conexión Divina)'
+      const btnTrue = document.createElement('button');
+      btnTrue.textContent = 'Verdad (Conexión Divina)';
+      btnTrue.className = 'choice encounter-choice';
+      btnTrue.dataset.answer = 'true';
+      modalChoices.appendChild(btnTrue);
 
-        // Botón 'Falso (Fake News)'
-        const btnFalse = document.createElement('button');
-        btnFalse.textContent = 'Falso (Fake News)';
-        btnFalse.className = 'choice encounter-choice';
-        btnFalse.dataset.answer = 'false';
-        modalChoices.appendChild(btnFalse);
+      // Botón 'Falso (Fake News)'
+      const btnFalse = document.createElement('button');
+      btnFalse.textContent = 'Falso (Fake News)';
+      btnFalse.className = 'choice encounter-choice';
+      btnFalse.dataset.answer = 'false';
+      modalChoices.appendChild(btnFalse);
 
-    } else { 
-        // 🛑 LÓGICA PARA TRIVIA (Nivel 1)
-        
-        questionObj.choices.forEach((c, idx) => {
-            const btn = document.createElement('div');
-            btn.className = 'choice';
-            btn.textContent = c.text || c; 
-            
-            // Guardamos el índice para la verificación de respuesta
-            btn.dataset.index = idx; 
-            modalChoices.appendChild(btn);
-        });
-        
-        // Nivel 1 (Trivia) requiere un clic en una opción para habilitar el botón "Enviar"
-        submitAnswerBtn.disabled = true; 
+    } else {
+      // 🛑 LÓGICA PARA TRIVIA (Nivel 1)
 
-        // Configurar el timer para Nivel 1
-        let timeLeft = (levelIndex === 0) ? 30 : 9999;
-        modalTimer.textContent = timeLeft;
-        modalTimer.classList.toggle('hidden', levelIndex !== 0);
-    
-        if (modalTimerInterval) clearInterval(modalTimerInterval);
-        if (levelIndex === 0) {
-          modalTimerInterval = setInterval(()=> {
-            if (timeLeft > 0) {
-              timeLeft--;
-              modalTimer.textContent = timeLeft;
-            } else {
-              clearInterval(modalTimerInterval);
-              closeModal('wrong', 0); 
-            }
-          }, 1000);
-        }
-    }
+      questionObj.choices.forEach((c, idx) => {
+        const btn = document.createElement('div');
+        btn.className = 'choice';
+        btn.textContent = c.text || c;
 
-
-    // Listener de selección unificado para Trivia y Encounter
-    modalChoices.querySelectorAll('.choice').forEach(choice => {
-        choice.addEventListener('click', ()=> {
-            [...modalChoices.children].forEach(ch => ch.classList.remove('selected'));
-            choice.classList.add('selected');
-            
-            // Habilitar el botón de envío al hacer clic en cualquier opción
-            submitAnswerBtn.disabled = false; 
-
-            if (currentQuestion.type === 'encounter') {
-                currentSelection = choice.dataset.answer; 
-            } else {
-                // Trivia / Dilemma
-                currentSelection = parseInt(choice.dataset.index);
-            }
-        });
-    });
-    
-    // La validación se mueve al listener externo `submitAnswerBtn`
-    skipAnswerBtn.onclick = () => { 
-      closeModal('wrong', 0); 
-    };
-  }
-  
-  // ----------------------------------------------------------------------
-  // 🛑 FUNCIÓN: Lógica de envío de respuesta (Unificado)
-  // ----------------------------------------------------------------------
-  function submitModalAnswer() {
-      if (currentSelection === null) {
-          modalFeedback.textContent = '¡Selecciona una opción antes de confirmar!';
-          return;
-      }
+        btn.dataset.index = idx;
+        modalChoices.appendChild(btn);
+      });
 
       submitAnswerBtn.disabled = true;
-      let isCorrect = false;
-      let points = 0;
-      let resultType = 'wrong';
 
-      if (currentQuestion.type === 'trivia') {
-          // Lógica de validación para Trivia (Nivel 1)
-          isCorrect = currentSelection === currentQuestion.correctIndex;
-          points = isCorrect ? 10 : 0;
-          resultType = isCorrect ? 'correct' : 'wrong';
+      // Configurar el timer para Nivel 1
+      let timeLeft = (levelIndex === 0) ? 30 : 9999;
+      modalTimer.textContent = timeLeft;
+      modalTimer.classList.toggle('hidden', levelIndex !== 0);
 
-      } else if (currentQuestion.type === 'encounter') {
-          // Lógica de validación para Encounter (Nivel 3)
-          const correctAnswerStr = String(currentQuestion.correctAnswer);
-          isCorrect = currentSelection === correctAnswerStr;
-          points = isCorrect ? currentQuestion.points : 0;
-          resultType = isCorrect ? 'correct' : 'wrong';
-          
-      } // Se omite 'dilemma' ya que tu lógica de Nivel 2 lo maneja en el onclick de la tarjeta.
-
-      // Mostrar el resultado en el modal
-      if (isCorrect) {
-          state.score += points;
-          modalFeedback.textContent = 
-              currentQuestion.type === 'encounter' ? 
-              `¡Validado! +${points} pts. Es una Conexión Divina.` : 
-              `¡Correcto! ¡Sigue así! (+${points} pts)`;
-      } else {
-          modalFeedback.textContent = 
-              currentQuestion.type === 'encounter' ? 
-              '¡Fake News! Esa conexión no es del Evangelio.' : 
-              'Respuesta incorrecta. Sigue evangelizando.';
+      if (modalTimerInterval) clearInterval(modalTimerInterval);
+      if (levelIndex === 0) {
+        modalTimerInterval = setInterval(() => {
+          if (timeLeft > 0) {
+            timeLeft--;
+            modalTimer.textContent = timeLeft;
+          } else {
+            clearInterval(modalTimerInterval);
+            // 🛑 SI SE ACABA EL TIEMPO: Muestra feedback y reanuda, NO elimina el espíritu.
+            closeModal('wrong', 0);
+          }
+        }, 1000);
       }
+    }
 
-      // Deshabilitar botones de opción para que no puedan cambiarla
-      document.querySelectorAll('#modal-choices .choice').forEach(btn => btn.disabled = true);
+    // Listener de selección unificado
+    modalChoices.querySelectorAll('.choice').forEach(choice => {
+      choice.addEventListener('click', () => {
+        [...modalChoices.children].forEach(ch => ch.classList.remove('selected'));
+        choice.classList.add('selected');
 
-      // Cierra el modal después de 1 segundo (REDUCIDO de 2000ms a 1000ms)
+        submitAnswerBtn.disabled = false;
+
+        if (currentQuestion.type === 'encounter') {
+          currentSelection = choice.dataset.answer;
+        } else {
+          currentSelection = parseInt(choice.dataset.index);
+        }
+      });
+    });
+
+    // La validación se mueve al listener externo `submitAnswerBtn`
+    skipAnswerBtn.onclick = () => {
+      // 🛑 SI USA SKIP: Muestra feedback y reanuda, NO elimina el espíritu.
+      closeModal('wrong', 0);
+    };
+  }
+
+  // ----------------------------------------------------------------------
+  // 🛑 FUNCIÓN MEJORADA: Lógica de envío de respuesta (Unificado)
+  // ----------------------------------------------------------------------
+  function submitModalAnswer() {
+    if (currentSelection === null) {
+      modalFeedback.textContent = '¡Selecciona una opción antes de confirmar!';
+      modalFeedback.style.color = '#ffeb3b';
+      return;
+    }
+
+    submitAnswerBtn.disabled = true;
+    let isCorrect = false;
+    let points = 0;
+    let resultType = 'wrong';
+
+    if (currentQuestion.type === 'trivia') {
+      isCorrect = currentSelection === currentQuestion.correctIndex;
+      points = isCorrect ? 10 : 0;
+      resultType = isCorrect ? 'correct' : 'wrong';
+
+    } else if (currentQuestion.type === 'encounter') {
+      const correctAnswerStr = String(currentQuestion.correctAnswer);
+      isCorrect = currentSelection === correctAnswerStr;
+      points = isCorrect ? currentQuestion.points : 0;
+      resultType = isCorrect ? 'correct' : 'wrong';
+    }
+
+    // ------------------------------------------------------------------
+    // ❌ RESPUESTA INCORRECTA
+    // ------------------------------------------------------------------
+    if (!isCorrect) {
+      modalFeedback.textContent =
+        currentQuestion.type === 'encounter' ?
+        '❌ ¡Fake News! Esa conexión no es del Evangelio. Intenta de nuevo.' :
+        '❌ Respuesta incorrecta. Sigue evangelizando. Intenta de nuevo.';
+      modalFeedback.style.color = '#ff6b6b';
+      playAudio('audio_wrong');
+
+      // 🛑 NO SE CIERRA EL MODAL. Se limpia la selección y se reactiva el botón
       setTimeout(() => {
-          closeModal(resultType, points);
-          // Re-habilitar botones para el próximo uso (aunque closeModal lo limpia, lo dejamos para la próxima apertura)
-          document.querySelectorAll('#modal-choices .choice').forEach(btn => btn.disabled = false);
-      }, 1000); // ⬅️ CAMBIO: 1 segundo
+        submitAnswerBtn.disabled = false;
+        currentSelection = null; // Limpiar selección para obligar a seleccionar de nuevo
+        // Remover la clase 'selected' y re-habilitar visualmente
+        modalChoices.querySelectorAll('.choice').forEach(ch => ch.classList.remove('selected'));
+        modalFeedback.textContent = 'Selecciona una nueva opción.';
+        modalFeedback.style.color = '#ffffff';
+      }, 1000);
+
+      // Deshabilitar la selección temporalmente
+      modalChoices.querySelectorAll('.choice').forEach(btn => btn.disabled = true);
+      setTimeout(() => {
+        modalChoices.querySelectorAll('.choice').forEach(btn => btn.disabled = false);
+      }, 1000);
+
+      return; // Detener el flujo aquí
+    }
+
+    // ------------------------------------------------------------------
+    // ✔️ RESPUESTA CORRECTA
+    // ------------------------------------------------------------------
+    state.score += points;
+
+    modalFeedback.textContent =
+      currentQuestion.type === 'encounter' ?
+      `✔️ ¡Validado! +${points} pts. Es una Conexión Divina.` :
+      `✔️ ¡Correcto! ¡Sigue así! (+${points} pts)`;
+    modalFeedback.style.color = '#6ee7b7';
+    playAudio('audio_correct');
+
+    // 🛑 ELIMINAR ESPÍRITU AHORA
+    if (spiritToRemoveIndex !== -1) {
+      levels[state.currentLevel].spirits.splice(spiritToRemoveIndex, 1);
+      spiritToRemoveIndex = -1;
+    }
+
+    // Cierra el modal después de 1 segundo (con mensaje de éxito)
+    setTimeout(() => {
+      // 🛑 Se llama a closeModal solo para ocultar el modal y mostrar el feedback global
+      closeModal(resultType, points);
+      state.paused = false; // Reanudar el juego (la pausa se hizo en openTrivia)
+      updateHUD();
+    }, 1500);
   }
 
   // ----------------------------------------------------------------------
@@ -613,43 +650,71 @@
   submitAnswerBtn.addEventListener('click', submitModalAnswer);
 
 
-  function updateHUD(){ 
-      scoreEl.textContent = `Puntos: ${state.score}`;   
-      levelLabel.textContent = `Nivel ${state.currentLevel+1}: ${levels[state.currentLevel].name}`; 
+  function updateHUD() {
+    scoreEl.textContent = `Puntos: ${state.score}`;
+    levelLabel.textContent = `Nivel ${state.currentLevel+1}: ${levels[state.currentLevel].name}`;
   }
 
   function startLevel(index) {
-      // stopBackgroundMusic(); // Esto se hace en startGame
-      state.currentLevel = index;
-      state.currentQuestionIndex = 0; 
-      player = new Player(40, 460); 
-      lastTime = performance.now();
-      state.paused = false;
-      updateHUD();
+    // stopBackgroundMusic(); // Esto se hace en startGame
+    state.currentLevel = index;
+    state.currentQuestionIndex = 0;
+    state.reachedGoal = false; // Resetear el estado de la bandera
+    player = new Player(40, 460);
+    lastTime = performance.now();
+    state.paused = false;
+    updateHUD();
   }
 
+  // ----------------------------------------------------------------------
+  // 🛑 FUNCIÓN MEJORADA: Lógica de Nivel Completo
+  // ----------------------------------------------------------------------
   function onLevelComplete() {
-    state.score += 50; 
-    
-    const badgeMap = ['🟢 “Follower Confirmado”','🔵 “Espíritu ON”','🟣 “Influencer del Evangelio”'];
+    const spiritsRemaining = levels[state.currentLevel].spirits.length;
+
+    // 🛑 VALIDACIÓN CLAVE: Si quedan espíritus, bloquear el avance.
+    if (spiritsRemaining > 0) {
+      // 1. Mostrar un mensaje de bloqueo y bloquear movimiento inmediatamente
+      displayFeedback(`❗ Aún quedan ${spiritsRemaining}¡No puedes avanzar!`, "wrong", 1.0);
+      state.paused = true; 
+      
+      // 2. Quitar la bandera de "alcanzada" para permitir el reintento.
+      state.reachedGoal = false;
+
+      setTimeout(() => {
+        // Asegúrate de que solo reanudamos si *ningún* modal de pregunta está visible.
+        const isModalOpen = !modal.classList.contains('hidden') || !matchModal.classList.contains('hidden');
+        
+        if (!isModalOpen) {
+           state.paused = false; 
+        }
+      }, 1); // 3 segundos, igual que la duración del feedback
+
+      return; // ⬅️ Bloquea el avance del nivel
+    }
+
+    // Si llegamos aquí, el nivel está realmente completo:
+    state.score += 50;
+
+    const badgeMap = ['🟢 “Follower Confirmado”', '🔵 “Espíritu ON”', '🟣 “Influencer del Evangelio”'];
     state.badges.add(badgeMap[state.currentLevel]);
-    
+
     const nextLevelIndex = state.currentLevel + 1;
 
-    state.paused = true; 
+    state.paused = true;
     playAudio('audio_level_complete');
-    displayFeedback(`¡Wow, has viralizado un mensaje de amor! NIVEL ${state.currentLevel + 1} COMPLETO! (+50 pts) 🏆`, 'level'); 
-    
-    // REDUCIDO: Espera solo 1 segundo antes de pasar al siguiente nivel o reto final.
+    displayFeedback(`¡Wow, has viralizado un mensaje de amor!`);
+
+    // Esperar el tiempo de feedback de nivel (3.5s) antes de avanzar
     setTimeout(() => {
-        if (nextLevelIndex < levels.length) {
-          startLevel(nextLevelIndex);
-          state.paused = false; 
-        } else {
-          openFinalChallenge();
-        }
-        updateHUD();
-    }, 1000); // ⬅️ CAMBIO: 1 segundo
+      if (nextLevelIndex < levels.length) {
+        startLevel(nextLevelIndex);
+        state.paused = false;
+      } else {
+        openFinalChallenge();
+      }
+      updateHUD();
+    }, 3000);
   }
 
   function openFinalChallenge() {
@@ -672,7 +737,7 @@
     endScreen.classList.remove('hidden');
     state.score += 100; // +100 pts por "Finaliza todo el juego"
     finalScoreEl.textContent = `Puntos totales: ${state.score}`;
-    
+
     badgesEl.innerHTML = '';
     state.badges.forEach(b => {
       const span = document.createElement('span');
@@ -681,81 +746,93 @@
       badgesEl.appendChild(span);
     });
   }
-  
+
   function updateScore(points) {
     state.score += points;
   }
 
   // ----------------------------------------------------------------------------------
-  // BUCLE PRINCIPAL DEL JUEGO (Game Loop) (Mantenido)
+  // BUCLE PRINCIPAL DEL JUEGO (Game Loop)
   // ----------------------------------------------------------------------------------
-  function loop(ts) { 
-      const dt = Math.min(0.05, (ts - lastTime) / 1000);
-      lastTime = ts;
-      
-      // La actualización solo ocurre si NO está en pausa
-      if (!state.paused && state.running) { 
-          update(dt);
-      }
-      
-      render();
-      
-      if (state.running) requestAnimationFrame(loop); 
+  function loop(ts) {
+    const dt = Math.min(0.05, (ts - lastTime) / 1000);
+    lastTime = ts;
+
+    if (!state.paused && state.running) {
+      update(dt);
+    }
+
+    render();
+
+    if (state.running) requestAnimationFrame(loop);
   }
-  
+
   // ----------------------------------------------------------------------------------
-  // LÓGICA DE ACTUALIZACIÓN (Update) (Mantenido)
+  // 🛑 LÓGICA DE ACTUALIZACIÓN (Update) MEJORADA
   // ----------------------------------------------------------------------------------
   function update(dt) {
     // Manejo del Feedback (Pausa visual)
     if (feedback.timer > 0) {
-        feedback.timer -= dt;
-        // Solo reanudar automáticamente si NO es un feedback de cambio de nivel
-        if (feedback.timer <= 0 && feedback.type !== 'level') { 
-            state.paused = false; 
-            feedback.message = null; // Limpiar mensaje de feedback
-        }
-        if (feedback.type === 'level' && feedback.timer > 0) return; // Bloquea el movimiento durante el mensaje de nivel completo
+      feedback.timer -= dt;
+      // Solo reanudar automáticamente si NO es un feedback de cambio de nivel
+      if (feedback.timer <= 0 && feedback.type !== 'level') {
+        //state.paused = false; // Se reanuda en onLevelComplete si es necesario
+        feedback.message = null;
+      }
+      // Bloquea el movimiento durante el mensaje de nivel completo (3.5s)
+      if (feedback.type === 'level' && feedback.timer > 0) return;
     }
-    
-    // Si state.paused fue seteado por el botón de pausa o un modal, sale aquí.
-    if (state.paused) return; 
 
-    // Lógica de movimiento
+    if (state.paused) return;
+
+    // Lógica de movimiento (Mantenida)
     let moveLeft = keys['arrowleft'] || keys['a'] || mobileLeft;
     let moveRight = keys['arrowright'] || keys['d'] || mobileRight;
-    let jump = keys['arrowup'] || keys['w'] || keys[' ' ] || mobileJump;
+    let jump = keys['arrowup'] || keys['w'] || keys[' '] || mobileJump;
 
-    if (moveLeft) { player.vx = -player.speed; player.facing = 'left'; }
-    else if (moveRight) { player.vx = player.speed; player.facing = 'right'; }
-    else { player.vx = 0; player.facing = 'front'; }
+    if (moveLeft) {
+      player.vx = -player.speed;
+      player.facing = 'left';
+    } else if (moveRight) {
+      player.vx = player.speed;
+      player.facing = 'right';
+    } else {
+      player.vx = 0;
+      player.facing = 'front';
+    }
 
     if (jump && player.onGround) {
       player.vy = player.jumpSpeed;
       player.onGround = false;
       player.facing = 'hand';
-      playAudio('audio_jump'); 
+      playAudio('audio_jump');
     }
 
-    player.vy += 1500 * dt; // Gravedad
+    player.vy += 1500 * dt;
     player.x += player.vx * dt;
     player.y += player.vy * dt;
 
-    // Clamp player position
     if (player.x < 0) player.x = 0;
     if (player.x + player.w > WORLD_WIDTH) player.x = WORLD_WIDTH - player.w;
     if (player.y > canvas.height) {
-      player.x = 40; player.y = 460; player.vy = 0; 
+      player.x = 40;
+      player.y = 460;
+      player.vy = 0;
     }
 
     const level = levels[state.currentLevel];
     player.onGround = false;
-    
-    // Colisión con plataformas 
+
+    // Colisión con plataformas (Mantenida)
     const previousY = player.y - player.vy * dt;
     for (const p of level.platforms) {
-      const plat = {x:p.x,y:p.y,w:p.w,h:p.h};
-      
+      const plat = {
+        x: p.x,
+        y: p.y,
+        w: p.w,
+        h: p.h
+      };
+
       if (player.x + player.w > plat.x && player.x < plat.x + plat.w) {
         if (player.y + player.h > plat.y && previousY + player.h <= plat.y) {
           player.y = plat.y - player.h;
@@ -768,12 +845,22 @@
       }
     }
 
-    // Colisión con spirits (Activa el modal)
+    // Colisión con spirits (Activa el modal) (Mantenida)
     spiritToRemoveIndex = -1;
     for (let i = 0; i < level.spirits.length; i++) {
       const s = level.spirits[i];
-      const spiritBox = {x:s.x, y:s.y, w:s.w, h:s.h};
-      const playerBox = {x:player.x, y:player.y, w:player.w, h:player.h};
+      const spiritBox = {
+        x: s.x,
+        y: s.y,
+        w: s.w,
+        h: s.h
+      };
+      const playerBox = {
+        x: player.x,
+        y: player.y,
+        w: player.w,
+        h: player.h
+      };
 
       if (aabb(playerBox, spiritBox)) {
         if (window.GAME_QUESTIONS) {
@@ -781,52 +868,62 @@
           let questionObj = currentQuestions ? currentQuestions[s.index] : null;
 
           if (questionObj) {
-              openTrivia(questionObj, state.currentLevel, i); 
-              break; 
+            openTrivia(questionObj, state.currentLevel, i);
+            break;
           }
         }
       }
     }
 
-    // flag check (Fin de nivel)
+    // 🛑 flag check (Fin de nivel) - Solo llama a onLevelComplete si la bandera no ha sido registrada.
     const flag = level.flag;
-    if (player.x + player.w > flag.x && player.y < flag.y + flag.h && player.x < flag.x + flag.w) {
-      onLevelComplete();
+    if (aabb({x: player.x, y: player.y, w: player.w, h: player.h}, flag)) {
+      if (!state.reachedGoal) {
+        state.reachedGoal = true; // Marca que ha tocado la bandera
+        onLevelComplete(); // Llama a la función que valida los espíritus
+      }
+    } else {
+       // Permite al jugador reintentar tocar la bandera si fue bloqueado
+       if (state.reachedGoal && levels[state.currentLevel].spirits.length > 0) {
+           state.reachedGoal = false;
+       }
     }
-    
-    // Lógica de la Cámara (Scroll)
+
+
+    // Lógica de la Cámara (Scroll) (Mantenida)
     cameraX = player.x - VIEWPORT_WIDTH / 2;
     if (cameraX < 0) cameraX = 0;
     if (WORLD_WIDTH > VIEWPORT_WIDTH) {
-        if (cameraX > WORLD_WIDTH - VIEWPORT_WIDTH) cameraX = WORLD_WIDTH - VIEWPORT_WIDTH;
+      if (cameraX > WORLD_WIDTH - VIEWPORT_WIDTH) cameraX = WORLD_WIDTH - VIEWPORT_WIDTH;
     } else {
-        cameraX = 0; 
+      cameraX = 0;
     }
   }
 
   // ----------------------------------------------------------------------------------
-  // LÓGICA DE DIBUJO (Render) 
+  // LÓGICA DE DIBUJO (Render) (Mantenida)
   // ----------------------------------------------------------------------------------
   function render() {
-    ctx.clearRect(0,0,VIEWPORT_WIDTH,canvas.height);
+    ctx.clearRect(0, 0, VIEWPORT_WIDTH, canvas.height);
 
     const level = levels[state.currentLevel];
-    const bgKey = level.bgKey; 
+    const bgKey = level.bgKey;
     const bgImg = IMAGES[bgKey];
-    
+
     if (bgImg) {
-      ctx.drawImage(bgImg, cameraX, 0, VIEWPORT_WIDTH, canvas.height, 
-                    0, 0, VIEWPORT_WIDTH, canvas.height);
+      ctx.drawImage(bgImg, cameraX, 0, VIEWPORT_WIDTH, canvas.height,
+        0, 0, VIEWPORT_WIDTH, canvas.height);
     } else {
-      const gradient = ctx.createLinearGradient(0,0,0,canvas.height);
-      gradient.addColorStop(0,'#6dd3ff22'); gradient.addColorStop(1,'#ffd16611');
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, '#6dd3ff22');
+      gradient.addColorStop(1, '#ffd16611');
       ctx.fillStyle = gradient;
-      ctx.fillRect(0,0,VIEWPORT_WIDTH,canvas.height);
+      ctx.fillRect(0, 0, VIEWPORT_WIDTH, canvas.height);
     }
-    
+
     ctx.save();
-    ctx.translate(-cameraX, 0); 
-    
+    ctx.translate(-cameraX, 0);
+
     // Platforms
     ctx.fillStyle = '#07263b';
     for (const p of level.platforms) ctx.fillRect(p.x, p.y, p.w, p.h);
@@ -835,50 +932,57 @@
     for (const s of level.spirits) {
       const t = Date.now() / 200;
       ctx.save();
-      
+
       // Aplicar destello blanco (halo) para todos
       ctx.globalAlpha = 0.9 + Math.sin(t) * 0.1;
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.arc(s.x + s.w/2, s.y + s.h/2, Math.max(s.w,s.h), 0, Math.PI*2);
+      ctx.arc(s.x + s.w / 2, s.y + s.h / 2, Math.max(s.w, s.h), 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
-      
+
       // Determinar la imagen a usar
       let spiritImg = null;
       let assetKey = s.asset;
 
-      // Nivel 3 usa imágenes de preguntas (pregunta1, pregunta2, etc.)
+      // Nivel 3 usa imágenes de preguntas
       if (state.currentLevel === 2) {
-          spiritImg = IMAGES[assetKey];
-      } 
-      // Nivel 1 y 2 usan combinación aleatoria (spirit, spiritt, nube)
-      else if (state.currentLevel === 0 || state.currentLevel === 1) {
-          spiritImg = IMAGES[assetKey]; 
+        spiritImg = IMAGES[assetKey];
       }
-      
+      // Nivel 1 y 2 usan combinación aleatoria
+      else if (state.currentLevel === 0 || state.currentLevel === 1) {
+        spiritImg = IMAGES[assetKey];
+      }
+
       // Dibujar la imagen
       if (spiritImg) {
-        // Dibujar con un pequeño margen para que se vea el destello
-        ctx.drawImage(spiritImg, s.x - 6, s.y - 6, s.w + 12, s.h + 12); 
+        ctx.drawImage(spiritImg, s.x - 6, s.y - 6, s.w + 12, s.h + 12);
       } else {
-        // Fallback si la imagen no existe
         ctx.fillStyle = '#ff6b6b';
         ctx.fillRect(s.x, s.y, s.w, s.h);
       }
     }
 
+    
     // Flag (bandera)
-    ctx.fillStyle = '#2ecc71';
     const f = level.flag;
-    ctx.fillRect(f.x, f.y, f.w, f.h);
+    const flagImg = IMAGES[f.assetKey]; // Intentar cargar la imagen usando la nueva clave
+
+    if (flagImg) {
+      // 🛑 DIBUJAR IMAGEN SI EXISTE
+      ctx.drawImage(flagImg, f.x, f.y, f.w, f.h);
+    } else {
+      // DIBUJAR RECTÁNGULO DE COLOR (FALLBACK si la imagen no se carga)
+      ctx.fillStyle = '#2ecc71';
+      ctx.fillRect(f.x, f.y, f.w, f.h);
+    }
 
     // Player
     player.draw(ctx);
     
-    ctx.restore(); 
-    
-    
+    ctx.restore();
+
+
     // Dibujar el feedback (si está activo)
     if (feedback.timer > 0) {
       ctx.save();
@@ -886,33 +990,32 @@
       ctx.textAlign = 'center';
       ctx.shadowColor = 'rgba(0,0,0,0.8)';
       ctx.shadowBlur = 10;
-      
+
       let color = '#ffffff';
-      if (feedback.type === 'correct') color = '#6ee7b7'; 
-      else if (feedback.type === 'wrong') color = '#ff6b6b'; 
+      if (feedback.type === 'correct') color = '#6ee7b7';
+      else if (feedback.type === 'wrong') color = '#ff6b6b';
       else if (feedback.type === 'level') color = '#f9c74f';
 
       ctx.fillStyle = color;
       ctx.fillText(feedback.message, VIEWPORT_WIDTH / 2, canvas.height / 2);
       ctx.restore();
     }
-  } 
+  }
 
   // ----------------------------------------------------------------------
-  // 🕹️ INICIALIZACIÓN Y MANEJO DE EVENTOS
+  // 🕹️ INICIALIZACIÓN Y MANEJO DE EVENTOS (Mantenido)
   // ----------------------------------------------------------------------
 
   // Lógica de Pausa / Reanudar
   pauseBtn.addEventListener('click', () => {
     if (state.running && (modal && !modal.classList.contains('hidden') || matchModal && !matchModal.classList.contains('hidden'))) {
-      // No permitir la pausa si un modal de pregunta está abierto (ya está pausado)
-      return; 
+      return;
     }
     state.paused = !state.paused;
     pauseBtn.textContent = state.paused ? '▶️ Reanudar' : '⏸ Pausa';
-    
+
     if (state.paused) {
-        stopBackgroundMusic();
+      stopBackgroundMusic();
     }
   });
 
@@ -923,82 +1026,110 @@
       e.target.tagName === 'INPUT' ||
       e.target.tagName === 'TEXTAREA' ||
       e.target.isContentEditable;
-  
-    // ✅ SI ESTÁ ESCRIBIENDO, NO BLOQUEAR TECLAS
+
     if (isTyping) return;
-  
+
     if (['arrowleft', 'arrowright', 'arrowup', 'w', 'a', 'd', ' '].includes(key)) {
       keys[key] = true;
-      e.preventDefault(); 
+      e.preventDefault();
     }
-  
+
     if (key === 'p') {
       pauseBtn.click();
     }
   });
-  
+
   document.addEventListener('keyup', (e) => {
     const key = e.key.toLowerCase();
     const isTyping =
       e.target.tagName === 'INPUT' ||
       e.target.tagName === 'TEXTAREA' ||
       e.target.isContentEditable;
-  
+
     if (isTyping) return;
-  
+
     if (['arrowleft', 'arrowright', 'arrowup', 'w', 'a', 'd', ' '].includes(key)) {
       keys[key] = false;
     }
   });
 
-  // Controles Táctiles (Mobile)
-  leftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); mobileLeft = true; });
-  leftBtn.addEventListener('touchend', () => { mobileLeft = false; });
-  rightBtn.addEventListener('touchstart', (e) => { e.preventDefault(); mobileRight = true; });
-  rightBtn.addEventListener('touchend', () => { mobileRight = false; });
-  jumpBtn.addEventListener('touchstart', (e) => { e.preventDefault(); mobileJump = true; });
-  jumpBtn.addEventListener('touchend', () => { mobileJump = false; });
+  /// Controles Táctiles (Mobile) - MEJORADOS CON POINTER EVENTS
+  // -----------------------------------------------------------
   
+  // Función de Manejo (Reutilizable)
+  function handleButton(btn, isDown, e) {
+    if (e) e.preventDefault();
+    if (btn === 'left') mobileLeft = isDown;
+    else if (btn === 'right') mobileRight = isDown;
+    else if (btn === 'jump') mobileJump = isDown;
+
+    // Si estás reanudando, asegúrate de que el personaje deje de mirar la mano levantada
+    if (!isDown && btn === 'jump') {
+        player.facing = 'front';
+    }
+  }
+
+  // EVENTOS PARA EL BOTÓN IZQUIERDA
+  leftBtn.addEventListener('pointerdown', (e) => handleButton('left', true, e));
+  leftBtn.addEventListener('pointerup', (e) => handleButton('left', false, e));
+  leftBtn.addEventListener('pointerleave', (e) => handleButton('left', false, e)); // Para cuando el dedo/mouse se sale
+
+  // EVENTOS PARA EL BOTÓN DERECHA
+  rightBtn.addEventListener('pointerdown', (e) => handleButton('right', true, e));
+  rightBtn.addEventListener('pointerup', (e) => handleButton('right', false, e));
+  rightBtn.addEventListener('pointerleave', (e) => handleButton('right', false, e));
+
+  // EVENTOS PARA EL BOTÓN SALTAR
+  jumpBtn.addEventListener('pointerdown', (e) => handleButton('jump', true, e));
+  jumpBtn.addEventListener('pointerup', (e) => handleButton('jump', false, e));
+  jumpBtn.addEventListener('pointerleave', (e) => handleButton('jump', false, e));
+
+  // 🛑 Listener de limpieza general para evitar que se quede pegado si el usuario arrastra el dedo fuera de la pantalla
+  document.addEventListener('pointercancel', () => {
+    mobileLeft = false;
+    mobileRight = false;
+    mobileJump = false;
+    player.facing = 'front';
+  });
+
   // Función principal de inicio de juego
   function startGame() {
     menu.classList.add('hidden');
     howtoScreen.classList.add('hidden');
     gameScreen.classList.remove('hidden');
     endScreen.classList.add('hidden');
-    
+
     // Reiniciar estado
     state.running = true;
     state.score = 0;
     state.badges.clear();
-    
+
     // Iniciar el primer nivel
     startLevel(0);
-    
+
     // Iniciar el loop principal
     requestAnimationFrame(loop);
   }
-  
+
   // Manejo del flujo del juego al hacer clic en 'Empezar'
   startBtn.addEventListener('click', () => {
-    // Reproducir la intro (la música de fondo se manejaría dentro de startLevel si fuera continua)
-    playAudio('audio_intro'); 
+    playAudio('audio_intro');
     startGame();
   });
 
   replayBtn.addEventListener('click', () => {
     endScreen.classList.add('hidden');
     menu.classList.remove('hidden');
-    // La función startGame se encarga de re-iniciar todo
   });
 
   // Mostrar/Ocultar pantalla de ayuda
   howtoBtn.addEventListener('click', () => {
-      menu.classList.add('hidden');
-      howtoScreen.classList.remove('hidden');
+    menu.classList.add('hidden');
+    howtoScreen.classList.remove('hidden');
   });
   closeHowto.addEventListener('click', () => {
-      howtoScreen.classList.add('hidden');
-      menu.classList.remove('hidden');
+    howtoScreen.classList.add('hidden');
+    menu.classList.remove('hidden');
   });
 
 
@@ -1008,5 +1139,11 @@
     document.getElementById('loading').classList.add('hidden');
     menu.classList.remove('hidden');
   });
+
+  // 📢 EXPOSICIÓN DE FUNCIONES GLOBALES (PARA INTERACCIÓN EXTERNA)
+  window.game = {
+    closeMatchModal: closeMatchModal, // Necesario para el Nivel 2 (Emparejamiento)
+    // Puedes agregar más funciones públicas si las necesitas aquí
+  };
 
 })();

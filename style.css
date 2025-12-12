@@ -10,93 +10,113 @@
     --muted: #9aa4b2; /* Gris tenue */
     --glass: rgba(255, 255, 255, 0.08); /* Efecto vidrio/transparencia */
     --glass-border: rgba(255, 255, 255, 0.2); 
- 
+
     --font-game: "Press Start 2P", system-ui, sans-serif;
     --font-text: "Arial", sans-serif; 
- }
- 
- * {
+}
+
+* {
     box-sizing: border-box;
- }
- 
- html,
- body {
+}
+
+html,
+body {
     height: 100%;
     margin: 0;
     background: linear-gradient(180deg, #06101a 0%, var(--bg) 100%);
     color: #edf2f7;
     font-family: var(--font-text); 
+    /* Usar overflow-x para prevenir el scroll horizontal no deseado */
     overflow: hidden; 
- }
- 
- /* Estilos de Utilidad */
- .hidden {
-     display: none !important;
- }
- 
- /* --- CONTENEDOR PRINCIPAL DEL JUEGO (Marco) --- */
- #game-container {
-     width: 900px; 
-     height: 600px;
-     margin: 50px auto;
-     border: 5px solid var(--accent-2); 
-     box-shadow: 0 0 20px rgba(255, 209, 102, 0.5);
-     position: relative;
-     overflow: hidden;
-     background-color: var(--bg);
-     display: flex; 
-     flex-direction: column;
-     align-items: center;
-     justify-content: center;
- }
- 
- 
- /* ======================================================================
-    1. PANTALLAS (MENÚ, HOWTO, END)
-    ====================================================================== */
- 
- .screen {
-     position: absolute;
-     top: 0;
-     left: 0;
-     width: 100%;
-     height: 100%;
-     display: flex;
-     flex-direction: column;
-     align-items: center;
-     justify-content: center;
-     background-color: rgba(6, 16, 26, 0.95); 
-     z-index: 100;
-     text-align: center;
-     padding: 24px;
-     gap: 16px;
- }
- 
- /* ESTILO DE LA IMAGEN DEL LOGO EN EL MENÚ (Si existe) */
- #logo {
-     width: 120px; 
-     height: auto;
-     margin-bottom: 20px; 
- }
- 
- /* ESTILO DEL TÍTULO GRANDE (Estilo retro/inicio) */
- h1 {
+}
+
+/* Estilos de Utilidad */
+.hidden {
+    display: none !important;
+}
+
+/* --- CONTENEDOR PRINCIPAL DEL JUEGO (Marco) --- */
+/* CLAVE: Diseño fluido, centrado y con aspecto ratio fijo */
+#game-container {
+    /* Ocupa todo el viewport, luego se limita */
+    width: 100vw; 
+    height: 100vh;
+    margin: 0 auto;
+    
+    /* Limita el tamaño máximo para pantallas grandes (desktop) */
+    max-width: 900px; 
+    max-height: 600px;
+    
+    /* Fija el aspecto ratio del juego (900/600 = 1.5) */
+    aspect-ratio: 900 / 600; 
+
+    /* Centrado absoluto */
+    position: fixed; 
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    
+    /* Estilos visuales */
+    border: 5px solid var(--accent-2); 
+    box-shadow: 0 0 20px rgba(255, 209, 102, 0.5);
+    overflow: hidden;
+    background-color: var(--bg);
+    
+    /* Flexbox para centrar el contenido/canvas */
+    display: flex; 
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* ======================================================================
+   1. PANTALLAS (MENÚ, HOWTO, END)
+   ====================================================================== */
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* Las pantallas siempre deben llenar el contenedor redimensionado */
+    width: 100%; 
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(6, 16, 26, 0.95); 
+    z-index: 100;
+    text-align: center;
+    padding: 24px;
+    gap: 16px;
+}
+
+/* ESTILO DE LA IMAGEN DEL LOGO EN EL MENÚ (Si existe) */
+#logo {
+    width: 120px; 
+    height: auto;
+    margin-bottom: 20px; 
+}
+
+/* ESTILO DEL TÍTULO GRANDE (Estilo retro/inicio) */
+h1 {
     font-family: var(--font-game); 
     color: var(--accent-2); 
     text-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
     margin: 0 0 10px 0;
     font-size: 2.2rem;
- }
- h2 {
-     font-family: var(--font-game);
-     color: var(--accent-2);
- }
- 
- /* ======================================================================
-    2. BOTONES
-    ====================================================================== */
- 
- button {
+}
+h2 {
+    font-family: var(--font-game);
+    color: var(--accent-2);
+}
+
+/* ======================================================================
+   2. BOTONES
+   ====================================================================== */
+
+button {
     cursor: pointer;
     border: 0;
     padding: 12px 18px;
@@ -106,343 +126,370 @@
     font-family: var(--font-game);
     font-size: 0.8rem;
     text-transform: uppercase;
- }
- 
- /* Botón Principal (Iniciar) */
- .primary, #start-game, #submit-post {
-     background: linear-gradient(90deg, var(--accent), #ff9a9a);
-     color: #071018;
-     box-shadow: 0 6px 18px rgba(255, 107, 107, 0.38);
-     margin-top: 10px;
- }
- 
- /* Botones Secundarios (Cómo jugar, etc.) */
- .secondary, #how-to, #close-howto, #close-match-modal, #replay, #skip-answer, #pause-btn {
-     background: var(--glass);
-     color: var(--muted);
-     border: 1px solid rgba(255, 255, 255, 0.08);
- }
- 
- /* Botón de Enviar (dentro del modal) */
- #submit-answer {
-     background-color: #2ecc71; 
-     color: var(--panel);
- }
- 
- button:hover {
-     opacity: 0.9;
- }
- button:active {
+}
+
+/* Botón Principal (Iniciar) */
+.primary, #start-game, #submit-post {
+    background: linear-gradient(90deg, var(--accent), #ff9a9a);
+    color: #071018;
+    box-shadow: 0 6px 18px rgba(255, 107, 107, 0.38);
+    margin-top: 10px;
+}
+
+/* Botones Secundarios (Cómo jugar, etc.) */
+.secondary, #how-to, #close-howto, #close-match-modal, #replay, #skip-answer, #pause-btn {
+    background: var(--glass);
+    color: var(--muted);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Botón de Enviar (dentro del modal) */
+#submit-answer {
+    background-color: #2ecc71; 
+    color: var(--panel);
+}
+
+button:hover {
+    opacity: 0.9;
+}
+button:active {
     transform: translateY(2px);
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
- }
- 
- 
- /* ======================================================================
-    3. CANVAS Y HUD
-    ====================================================================== */
- 
- #game-canvas {
-     display: block;
-     background-color: black;
- }
- 
- #hud {
-     position: absolute;
-     top: 0;
-     left: 0;
-     width: 100%;
-     display: flex;
-     justify-content: space-between;
-     align-items: center;
-     padding: 10px 20px;
-     background: rgba(0, 0, 0, 0.6);
-     z-index: 10;
-     box-sizing: border-box;
-     font-family: var(--font-game);
-     font-size: 10px;
- }
- 
- #score {
+}
+
+
+/* ======================================================================
+   3. CANVAS Y HUD
+   ====================================================================== */
+
+#game-canvas {
+    display: block;
+    background-color: black;
+    /* CLAVE: El canvas se ajusta al 100% del contenedor */
+    width: 100%;
+    height: 100%;
+}
+
+#hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 10;
+    box-sizing: border-box;
+    font-family: var(--font-game);
+    font-size: 10px;
+}
+
+#score {
     font-size: 14px;
     font-weight: 700;
     color: white;
- }
- #level-label {
-     color: var(--accent-2);
- }
- 
- 
- /* ======================================================================
-    4. MODALES GENERALES (Trivia y Acción)
-    ====================================================================== */
- 
- .modal {
-     position: absolute;
-     top: 0;
-     left: 0;
-     width: 100%;
-     height: 100%;
-     background-color: rgba(6, 16, 26, 0.9);
-     display: flex;
-     align-items: center;
-     justify-content: center;
-     z-index: 50;
- }
- 
- .modal-content {
-     background: linear-gradient(180deg, #071018, #08212a);
-     padding: 30px;
-     border-radius: 12px;
-     width: 80%;
-     max-width: 600px;
-     color: #e6f7ff;
-     box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
-     text-align: center;
-     font-family: var(--font-text);
- }
- 
- #modal-choices {
-     margin: 20px 0;
-     display: flex;
-     flex-direction: column;
-     gap: 10px;
- }
- 
- .choice, .action-message {
-     background: var(--glass);
-     padding: 10px;
-     border-radius: 8px;
-     border: 1px solid rgba(255, 255, 255, 0.08);
-     cursor: pointer;
-     transition: background-color 0.2s, border 0.2s;
-     font-size: 0.9rem;
- }
- 
- .choice.selected {
-     background: linear-gradient(90deg, #6ee7b732, #60a5fa33);
-     border-color: #6ee7b766;
- }
- 
- #modal-timer {
-     color: var(--accent); 
-     font-weight: bold;
-     margin-right: 15px;
-     font-family: var(--font-game);
- }
- 
- #modal-footer {
-     display: flex;
-     justify-content: flex-end;
-     align-items: center;
-     gap: 10px;
-     margin-top: 15px;
- }
- 
- #final-post {
-     width: 100%;
-     height: 120px;
-     border-radius: 8px;
-     padding: 10px;
-     background: #071318;
-     border: 1px solid rgba(255, 255, 255, 0.04);
-     color: #fff;
-     resize: vertical;
-     font-family: var(--font-text);
- }
- 
- 
- /* ======================================================================
-    5. MODAL DE MATCHING (Nivel 2 - Dones - ESTILO DE TEXTO VERDE/OSCURO)
-    ====================================================================== */
- 
- .match-prompt-text {
-     font-size: 1.1rem;
-     margin-bottom: 20px;
-     color: var(--accent-2); 
- }
- 
- #dilemma-cards {
-     display: flex;
-     flex-wrap: wrap;
-     justify-content: center;
-     gap: 15px; 
-     perspective: 1000px;
- }
- 
- .don-card {
-     width: 120px; 
-     height: 150px; 
-     cursor: pointer;
-     background: transparent;
-     border-radius: 10px;
-     border: 3px solid #005f73;
-     position: relative;
- }
- 
- .card-inner {
-     position: relative;
-     width: 100%;
-     height: 100%;
-     text-align: center;
-     transition: transform 0.8s;
-     transform-style: preserve-3d;
- }
- 
- .don-card.flipped .card-inner {
-     transform: rotateY(180deg);
- }
- 
- .card-face {
-     position: absolute;
-     width: 100%;
-     height: 100%;
-     -webkit-backface-visibility: hidden;
-     backface-visibility: hidden;
-     display: flex;
-     align-items: center;
-     justify-content: center;
-     border-radius: 7px;
-     padding: 5px;
-     box-sizing: border-box;
- }
- 
- .card-front {
-     background-color: var(--panel); 
-     color: white;
- }
- .don-card img {
-     width: 100%;
-     height: 100%;
-     object-fit: contain; 
- }
- 
- /* ESTILO ACTUALIZADO DE LA CARA POSTERIOR (TEXTO) */
- .card-back {
-     background-color: #6200EE; /* Verde sólido brillante */
-     color: #ffffff; /* Texto oscuro para alto contraste */
-     transform: rotateY(180deg);
-     font-size: 12px; 
-     line-height: 1.3;
-     padding: 8px;
-     align-items: center; 
-     text-align: center; 
-     font-family: var(--font-text); 
-     font-weight: 600; 
- }
- 
- .don-card.wrong {
-     border-color: var(--accent); 
-     opacity: 0.7;
- }
- .don-card.wrong .card-front {
-      background-color: #B00020; 
- }
- 
- .match-results-box {
-     margin-top: 20px;
-     padding: 15px;
-     background: rgba(0, 0, 0, 0.4);
-     border-radius: 8px;
- }
- 
- #match-feedback-message {
-     color: #6ee7b7;
-     font-weight: bold;
-     font-family: var(--font-game);
-     font-size: 0.8rem;
- }
- #match-correct-phrase {
-     color: white;
-     font-size: 0.9rem;
-     margin-top: 8px;
-     line-height: 1.4;
- }
- 
- 
- /* ======================================================================
-    6. CONTROLES MÓVILES (AJUSTADOS)
-    ====================================================================== */
- 
- #mobile-controls {
-     position: absolute;
-     bottom: 20px; 
-     left: 0;
-     width: 100%;
-     height: 0; 
-     display: flex;
-     /* Distribución: Empuja los grupos a los extremos */
-     justify-content: space-between; 
-     padding: 0 24px; 
-     z-index: 20;
-     pointer-events: none; 
-     align-items: flex-end; 
- }
- 
- /* Define cómo se ven los grupos (para agrupar adelante y atrás) */
- .controls-group {
-     display: flex;
-     gap: 12px; /* Espacio reducido para juntar adelante/atrás */
-     pointer-events: auto; 
-     align-items: flex-end;
- }
- 
- /* Estilo visual del botón táctil (.ctl) */
- .ctl {
-     width: 64px;
-     height: 64px;
-     border-radius: 50%; 
-     background: rgba(255, 255, 255, 0.15); 
-     backdrop-filter: blur(4px); 
-     border: 2px solid rgba(255, 255, 255, 0.3);
-     color: rgba(255, 255, 255, 0.8);
-     font-size: 24px;
-     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-     margin: 0;
-     display: flex;
-     align-items: center;
-     justify-content: center;
-     
-     pointer-events: auto; 
-     touch-action: manipulation; 
-     transition: transform 0.1s, background 0.1s;
- }
- 
- /* Estilo activo al presionar */
- .ctl:active {
-     background: rgba(255, 255, 255, 0.3);
-     transform: scale(0.95);
- }
- 
- /* ======================================================================
-    7. RESPONSIVE
-    ====================================================================== */
- @media (max-width: 720px) {
-     #game-container {
-         width: 100%;
-         height: 100%;
-         margin: 0;
-         border: none;
-         box-shadow: none;
-     }
- 
-     #mobile-controls {
-         bottom: 12px;
-         padding: 0 12px;
-     }
-     
-     .ctl {
-         width: 58px;
-         height: 58px;
-         font-size: 20px;
-     }
-     
-     h1 {
-         font-size: 1.5rem;
-     }
-     
-     button {
-         padding: 10px 15px;
-         font-size: 0.7rem;
-     }
- }
+}
+#level-label {
+    color: var(--accent-2);
+}
+
+
+/* ======================================================================
+   4. MODALES GENERALES (Trivia y Acción)
+   ====================================================================== */
+
+.modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(6, 16, 26, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+}
+
+.modal-content {
+    background: linear-gradient(180deg, #071018, #08212a);
+    padding: 30px;
+    border-radius: 12px;
+    width: 80%;
+    max-width: 600px;
+    color: #e6f7ff;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+    text-align: center;
+    font-family: var(--font-text);
+}
+
+#modal-choices {
+    margin: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.choice, .action-message {
+    background: var(--glass);
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+    transition: background-color 0.2s, border 0.2s;
+    font-size: 0.9rem;
+}
+
+.choice.selected {
+    background: linear-gradient(90deg, #6ee7b732, #60a5fa33);
+    border-color: #6ee7b766;
+}
+
+#modal-timer {
+    color: var(--accent); 
+    font-weight: bold;
+    margin-right: 15px;
+    font-family: var(--font-game);
+}
+
+#modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+#final-post {
+    width: 100%;
+    height: 120px;
+    border-radius: 8px;
+    padding: 10px;
+    background: #071318;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    color: #fff;
+    resize: vertical;
+    font-family: var(--font-text);
+}
+
+
+/* ======================================================================
+   5. MODAL DE MATCHING (Nivel 2 - Dones)
+   ====================================================================== */
+
+.match-prompt-text {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    color: var(--accent-2); 
+}
+
+#dilemma-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px; 
+    perspective: 1000px;
+}
+
+.don-card {
+    width: 120px; 
+    height: 150px; 
+    cursor: pointer;
+    background: transparent;
+    border-radius: 10px;
+    border: 3px solid #005f73;
+    position: relative;
+}
+
+.card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.8s;
+    transform-style: preserve-3d;
+}
+
+.don-card.flipped .card-inner {
+    transform: rotateY(180deg);
+}
+
+.card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+.card-front {
+    background-color: var(--panel); 
+    color: white;
+}
+.don-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; 
+}
+
+/* ESTILO ACTUALIZADO DE LA CARA POSTERIOR (TEXTO) */
+.card-back {
+    background-color: #6200EE; /* Color para contraste */
+    color: #ffffff; 
+    transform: rotateY(180deg);
+    font-size: 12px; 
+    line-height: 1.3;
+    padding: 8px;
+    align-items: center; 
+    text-align: center; 
+    font-family: var(--font-text); 
+    font-weight: 600; 
+}
+
+.don-card.wrong {
+    border-color: var(--accent); 
+    opacity: 0.7;
+}
+.don-card.wrong .card-front {
+    background-color: #B00020; 
+}
+
+.match-results-box {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 8px;
+}
+
+#match-feedback-message {
+    color: #6ee7b7;
+    font-weight: bold;
+    font-family: var(--font-game);
+    font-size: 0.8rem;
+}
+#match-correct-phrase {
+    color: white;
+    font-size: 0.9rem;
+    margin-top: 8px;
+    line-height: 1.4;
+}
+
+
+/* ======================================================================
+   6. CONTROLES MÓVILES
+   ====================================================================== */
+
+#mobile-controls {
+    position: absolute;
+    bottom: 20px; 
+    left: 0;
+    width: 100%;
+    height: 0; 
+    display: flex;
+    justify-content: space-between; 
+    padding: 0 24px; 
+    z-index: 20;
+    pointer-events: none; 
+    align-items: flex-end; 
+}
+
+/* Define cómo se ven los grupos (para agrupar adelante y atrás) */
+.controls-group {
+    display: flex;
+    gap: 12px; 
+    pointer-events: auto; 
+    align-items: flex-end;
+}
+
+/* Estilo visual del botón táctil (.ctl) */
+.ctl {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%; 
+    background: rgba(255, 255, 255, 0.15); 
+    backdrop-filter: blur(4px); 
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    pointer-events: auto; 
+    touch-action: manipulation; 
+    transition: transform 0.1s, background 0.1s;
+}
+
+/* Estilo activo al presionar */
+.ctl:active {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(0.95);
+}
+
+/* ======================================================================
+   7. RESPONSIVE (Optimizaciones para Móvil)
+   ====================================================================== */
+/* Aplicar estilos responsivos cuando el ancho del viewport es menor o igual a 900px */
+@media (max-width: 900px) { 
+    
+    /* Adaptación del Contenedor Principal a la pantalla del móvil */
+    #game-container {
+        width: 100vw; 
+        height: 100vh;
+        margin: 0;
+        border: none;
+        box-shadow: none;
+        /* Eliminar centrado fijo en móvil para evitar conflictos con el scroll */
+        position: static; 
+        transform: none; 
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    /* Reducción general de tamaños para mejor legibilidad */
+    h1 {
+        font-size: 1.5rem;
+    }
+    
+    button {
+        padding: 10px 15px;
+        font-size: 0.7rem;
+    }
+
+    /* Ajuste de controles móviles */
+    #mobile-controls {
+        bottom: 12px;
+        padding: 0 12px;
+    }
+    
+    .ctl {
+        width: 58px;
+        height: 58px;
+        font-size: 20px;
+    }
+    
+    /* Ajuste de modales en pantallas pequeñas */
+    .modal-content {
+        width: 95%;
+        padding: 20px;
+    }
+    
+    /* Ajuste de tarjetas de matching */
+    #dilemma-cards {
+        gap: 8px;
+    }
+    .don-card {
+        width: 100px; 
+        height: 130px; 
+    }
+}

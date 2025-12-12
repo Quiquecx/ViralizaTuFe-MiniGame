@@ -93,9 +93,9 @@ window.GAME_QUESTIONS = {
       {
           type: 'match_dilemma',
           don: 'Ciencia',
-          initial: 'C',
+          initial: 'CI',
           prompt: 'En clase de ciencias, el maestro pide investigar sobre el agua.',
-          correct_phrase: 'Investigar, comprender y explicar con tus propias palabras para que otros aprendan.',
+          correct_phrase: 'Investigar, comprender y explicar con tus propias palabras sobre la importancia de cuidar los recursos naturales que tenemos.',
           points: 20
       },
       // Spirit 3: Fortaleza
@@ -121,7 +121,7 @@ window.GAME_QUESTIONS = {
           type: 'match_dilemma',
           don: 'Temor de Dios',
           initial: 'T',
-          prompt: 'Estás solo y ves dinero en la mesa de tu hermano.',
+          prompt: 'Estás solo y ves dinero de tu hermano en la mesa.',
           correct_phrase: 'No solo lo dejas, sino que lo cuidas y avisas a tu hermano.',
           points: 20
       },
@@ -129,7 +129,7 @@ window.GAME_QUESTIONS = {
       {
           type: 'match_dilemma',
           don: 'Consejo',
-          initial: 'C2', // Usa C2 para distinguirlo de Ciencia (C)
+          initial: 'C', // Usa C2 para distinguirlo de Ciencia (C)
           prompt: 'Un compañero está triste porque sacó mala nota.',
           correct_phrase: 'Animarlo, darle ideas para estudiar mejor y ofrecerte a ayudarlo.',
           points: 20
