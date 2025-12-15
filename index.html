@@ -10,6 +10,7 @@
 <body>
 
     <div id="game-container">
+
         <div id="menu" class="screen">
             <h1>Viraliza Tu Fe</h1>
             <p>¡Prepárate para la misión!</p>
@@ -26,11 +27,13 @@
         </div>
         
         <div id="game-screen" class="hidden">
+
             <div id="hud">
                 <span id="level-label">Nivel 1: Stories</span>
                 <span id="score">Puntos: 0</span>
                 <button id="pause-btn">||</button>
             </div>
+            
             <canvas id="game-canvas" width="900" height="600"></canvas>
             
             <div id="mobile-controls">
@@ -38,7 +41,6 @@
                     <button class="ctl" id="left-btn">◀</button>
                     <button class="ctl" id="right-btn">▶</button>
                 </div>
-                
                 <div class="controls-group right">
                     <button class="ctl" id="jump-btn">▲</button>
                 </div>
@@ -47,13 +49,10 @@
             <div id="modal" class="modal hidden">
                 <div class="modal-content">
                     <h2 id="modal-title">Desafío</h2>
-                    
                     <p id="modal-scenario" class="scenario-text"></p>
-                    
                     <p id="modal-question"></p> 
-                    
                     <div id="modal-choices">
-                        </div>
+                    </div>
                     <div id="modal-feedback"></div>
                     <div id="modal-footer">
                         <span id="modal-timer" class="hidden"></span>
@@ -67,10 +66,8 @@
                 <div class="modal-content">
                     <h2 id="match-title">Dilema - En Collab con el E.S.</h2>
                     <p id="match-prompt" class="match-prompt-text"></p>
-                    
                     <div id="dilemma-cards">
-                        </div>
-                    
+                    </div>
                     <div id="match-results-box" class="match-results-box hidden">
                         <p id="match-feedback-message"></p>
                         <p id="match-correct-phrase"></p>
@@ -83,7 +80,6 @@
                 <div class="modal-content final-challenge-content">
                     <h2>🎉 ¡Desafío Final: Publica tu Mensaje!</h2>
                     <p>Has superado los niveles. Escribe un **mensaje corto** para viralizar el Evangelio en tus redes.</p>
-                    
                     <div id="tweet-preview">
                         <div class="tweet-header">
                             <span class="username-tweet">@Elias_Evangeliza</span>
@@ -93,7 +89,6 @@
                             ¡Escribe aquí tu mensaje viral sobre los Dones!
                         </p>
                     </div>
-                    
                     <textarea id="final-post-input" placeholder="Escribe aquí tu texto para el post... (Máx. 280 caracteres)"></textarea>
                     <button id="submit-post-btn">Publicar Mensaje</button>
                 </div>
@@ -103,10 +98,8 @@
                 <div class="modal-content final-challenge-content">
                     <h2>¡Publicación Exitosa!</h2>
                     <p>Tu mensaje ha sido viralizado. ¡Misión cumplida!</p>
-
                     <div id="published-post-preview" class="post-preview">
-                        </div>
-
+                    </div>
                     <button id="finish-game-btn">Terminar Misión</button>
                 </div>
             </div>

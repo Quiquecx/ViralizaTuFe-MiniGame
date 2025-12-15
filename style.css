@@ -69,7 +69,6 @@ body {
     justify-content: center;
 }
 
-
 /* ======================================================================
    1. PANTALLAS (MENÚ, HOWTO, END)
    ====================================================================== */
@@ -275,8 +274,6 @@ button:active {
 }
 
 
-
-
 /* ======================================================================
    5. MODAL DE MATCHING (Nivel 2 - Dones)
    ====================================================================== */
@@ -441,9 +438,11 @@ button:active {
     transform: scale(0.95);
 }
 
+
 /* ======================================================================
    7. RESPONSIVE (Optimizaciones para Móvil)
    ====================================================================== */
+   
 /* Aplicar estilos responsivos cuando el ancho del viewport es menor o igual a 900px */
 @media (max-width: 900px) { 
     
@@ -498,11 +497,13 @@ button:active {
         height: 130px; 
     }
 }
+
+
 /* ======================================================================
    8. MODAL FINAL (POST)
    ====================================================================== */
 
-   .final-challenge-content {
+.final-challenge-content {
     /* Reducimos el ancho máximo para dar más espacio en el contenedor modal */
     max-width: 400px; 
     display: flex;

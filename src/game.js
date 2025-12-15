@@ -17,27 +17,39 @@
   const gameScreen = document.getElementById('game-screen');
   const scoreEl = document.getElementById('score');
   const levelLabel = document.getElementById('level-label');
-  const pauseBtn = document.getElementById('pause-btn'); // 🎯 Botón de Pausa
+  const pauseBtn = document.getElementById('pause-btn'); 
   const modal = document.getElementById('modal');
   const modalTitle = document.getElementById('modal-title');
+  const modalScenario = document.getElementById('modal-scenario'); 
   const modalQuestion = document.getElementById('modal-question');
   const modalChoices = document.getElementById('modal-choices');
   const modalTimer = document.getElementById('modal-timer');
   const modalFeedback = document.getElementById('modal-feedback');
   const submitAnswerBtn = document.getElementById('submit-answer');
   const skipAnswerBtn = document.getElementById('skip-answer');
+
+  // Modal Final de Entrada de Texto (Twit)
   const finalModal = document.getElementById('final-modal');
-  const finalPost = document.getElementById('final-post');
-  const submitPostBtn = document.getElementById('submit-post');
+  const finalPostInput = document.getElementById('final-post-input'); 
+  const userPostText = document.getElementById('user-post-text'); 
+  const submitPostBtn = document.getElementById('submit-post-btn'); 
+
+  // Modal de Publicación Final (Confirmación del Post Estilizado)
+  const publishConfirmModal = document.getElementById('publish-confirm-modal'); 
+  const publishedPostPreview = document.getElementById('published-post-preview'); 
+  const finishGameBtn = document.getElementById('finish-game-btn'); 
+  // Pantalla Final
   const endScreen = document.getElementById('end-screen');
   const finalScoreEl = document.getElementById('final-score');
   const badgesEl = document.getElementById('badges');
   const replayBtn = document.getElementById('replay');
+
+  // Controles Móviles
   const leftBtn = document.getElementById('left-btn');
   const rightBtn = document.getElementById('right-btn');
   const jumpBtn = document.getElementById('jump-btn');
 
-  // 🛑 ELEMENTOS DE UI PARA EL MATCH-MODAL (Nivel 2)
+  // ELEMENTOS DE UI PARA EL MATCH-MODAL (Nivel 2)
   const matchModal = document.getElementById('match-modal');
   const matchTitle = document.getElementById('match-title');
   const matchPrompt = document.getElementById('match-prompt');
@@ -728,49 +740,77 @@
     finalModal.classList.remove('hidden');
     state.paused = true;
     
-    // 🛑 Referencias a los nuevos elementos del modal final
+    // Referencias al modal de entrada
     const finalPostInput = document.getElementById('final-post-input');
     const submitPostBtn = document.getElementById('submit-post-btn');
     const userPostText = document.getElementById('user-post-text');
-    const postImage = document.getElementById('post-image');
 
     // --- 1. CONFIGURACIÓN INICIAL ---
     finalPostInput.value = '';
-    // Inicializar el texto de previsualización
     userPostText.textContent = '¡Escribe tu mensaje para viralizar los Dones aquí!';
-    
-    // 🛑 Configurar la imagen del post (usando la imagen 'celular' que ya cargaste)
-    if (IMAGES['celular']) {
-        postImage.src = IMAGES['celular'].src;
-    } else {
-        // Fallback si la imagen no se carga
-        postImage.src = 'src/Imagenes_L9/nube.png';
-    }
 
     // --- 2. LISTENER PARA LA PREVISUALIZACIÓN EN TIEMPO REAL ---
-    // Cada vez que el usuario teclea, el texto se actualiza en el post simulado
     finalPostInput.oninput = () => {
-        // Si el campo está vacío, mostrar un mensaje por defecto
         userPostText.textContent = finalPostInput.value.trim() || '¡Escribe tu mensaje para viralizar los Dones aquí!';
     };
 
-    // --- 3. LISTENER DEL BOTÓN PUBLICAR ---
+    // --- 3. LISTENER DEL BOTÓN PUBLICAR (Llama a showPublishedPost) ---
     submitPostBtn.onclick = () => {
       const text = finalPostInput.value.trim();
       
-      // Validar un mínimo de texto para el "reto creativo"
+      // Validación
       if (text.length < 15) { 
         alert('Tu post es muy corto. ¡Hazlo más viral! (Mínimo 15 caracteres).');
         return;
       }
       
-      // Lógica de finalización
-      state.score += 30; // +30 pts por "Reto creativo"
-      finalModal.classList.add('hidden');
-      state.paused = false;
-      showEndScreen();
+      // Llama a la nueva función para mostrar el post final estilizado
+      showPublishedPost(text);
     };
-  }
+}
+
+
+// ======================================================================
+// 2. NUEVA FUNCIÓN showPublishedPost()
+//    (Copia y pega esta función en game.js, cerca de openFinalChallenge)
+// ======================================================================
+
+function showPublishedPost(postText) {
+    // 1. Ocultar el modal de entrada y mostrar el de confirmación
+    finalModal.classList.add('hidden');
+    publishConfirmModal.classList.remove('hidden');
+
+    // 2. Puntaje (se aplica aquí al completar el reto)
+    state.score += 30;
+    
+    // 3. Crear el HTML del post final (usa la paloma como imagen de post)
+    publishedPostPreview.innerHTML = `
+        <div class="post-header">
+            <img src="src/Imagenes_L9/Elias_perfil_derecho.png" alt="Usuario" class="profile-pic"> 
+            <span class="username">Elias_Evangeliza</span>
+        </div>
+        
+        <img src="src/Imagenes_L9/L9_Paloma.png" alt="Imagen del Post" class="post-media">
+        
+        <div class="post-caption">
+            <p id="caption-username" class="username">Elias_Evangeliza</p>
+            <p class="post-text">${postText}</p>
+            <span class="post-time">Viralizado Ahora</span>
+        </div>
+        <div class="post-actions">
+            <span>❤️ 1,200 Me gusta</span>
+            <span>💬 250 Comentar</span>
+            <span>📤 Compartir</span>
+        </div>
+    `;
+
+    // 4. Configurar el botón "Terminar Misión"
+    finishGameBtn.onclick = () => {
+        publishConfirmModal.classList.add('hidden');
+        state.paused = false; 
+        showEndScreen(); // Mostrar la pantalla de logros y puntuación final
+    };
+}
 
   function showEndScreen() {
     endScreen.classList.remove('hidden');
@@ -789,6 +829,8 @@
   function updateScore(points) {
     state.score += points;
   }
+
+  
 
   // ----------------------------------------------------------------------------------
   // BUCLE PRINCIPAL DEL JUEGO (Game Loop)
@@ -1142,6 +1184,9 @@
     state.running = true;
     state.score = 0;
     state.badges.clear();
+    state.currentLevel = 0;
+
+    
 
     // Iniciar el primer nivel
     startLevel(0);
@@ -1151,38 +1196,40 @@
   }
 
   // Manejo del flujo del juego al hacer clic en 'Empezar'
-  startBtn.addEventListener('click', () => {
-    playAudio('audio_intro');
-    startGame();
-  });
+startBtn.addEventListener('click', () => {
+  playAudio('audio_intro');
+  startGame();
+});
 
-  replayBtn.addEventListener('click', () => {
-    endScreen.classList.add('hidden');
-    menu.classList.remove('hidden');
-  });
+// 🛠️ CORRECCIÓN CLAVE: El botón de Reinicio recarga la página
+replayBtn.addEventListener('click', () => {
+  // Esto asegura que todo el estado del juego, incluyendo el canvas y los espíritus,
+  // se reinicie completamente, eliminando el bug de las imágenes faltantes.
+  window.location.reload(); 
+});
 
-  // Mostrar/Ocultar pantalla de ayuda
-  howtoBtn.addEventListener('click', () => {
-    menu.classList.add('hidden');
-    howtoScreen.classList.remove('hidden');
-  });
-  closeHowto.addEventListener('click', () => {
-    howtoScreen.classList.add('hidden');
-    menu.classList.remove('hidden');
-  });
+// Mostrar/Ocultar pantalla de ayuda
+howtoBtn.addEventListener('click', () => {
+  menu.classList.add('hidden');
+  howtoScreen.classList.remove('hidden');
+});
+closeHowto.addEventListener('click', () => {
+  howtoScreen.classList.add('hidden');
+  menu.classList.remove('hidden');
+});
 
 
-  // Pre-carga y espera a que los recursos estén listos
-  preloadResources(() => {
-    // Si la carga es exitosa, mostrar el menú
-    document.getElementById('loading').classList.add('hidden');
-    menu.classList.remove('hidden');
-  });
+// Pre-carga y espera a que los recursos estén listos
+preloadResources(() => {
+  // Si la carga es exitosa, mostrar el menú
+  document.getElementById('loading').classList.add('hidden');
+  menu.classList.remove('hidden');
+});
 
-  // 📢 EXPOSICIÓN DE FUNCIONES GLOBALES (PARA INTERACCIÓN EXTERNA)
-  window.game = {
-    closeMatchModal: closeMatchModal, // Necesario para el Nivel 2 (Emparejamiento)
-    // Puedes agregar más funciones públicas si las necesitas aquí
-  };
+// 📢 EXPOSICIÓN DE FUNCIONES GLOBALES (PARA INTERACCIÓN EXTERNA)
+window.game = {
+  closeMatchModal: closeMatchModal, // Necesario para el Nivel 2 (Emparejamiento)
+  // Puedes agregar más funciones públicas si las necesitas aquí
+};
 
 })();

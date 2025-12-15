@@ -143,7 +143,7 @@ window.GAME_QUESTIONS = {
     {
         type: 'encounter',
         title: 'Reto 1: El Algoritmo de la Caridad',
-        scenario: 'Encuentras a alguien triste y solo, y ves a niños ayudando a otros.',
+        scenario: '"Encuentras a alguien triste y solo, y ves a niños ayudando a otros."',
         prompt: 'Se te revela esta frase: "Ayudar sin que nadie te lo pida ni vea es un algoritmo de caridad". ¿Es esta una **conexión divina** (Verdad) o una **fake news** (Falso)?',
         correctAnswer: true, // La frase es correcta/verdadera
         points: 20
@@ -151,7 +151,7 @@ window.GAME_QUESTIONS = {
     {
         type: 'encounter',
         title: 'Reto 2: Mensaje Transformador',
-        scenario: 'Te llega una notificación al celular con un destello del Espíritu Santo.',
+        scenario: '"Te llega una notificación al celular con un destello del Espíritu Santo."',
         prompt: 'La notificación dice: "El mensaje del Evangelio te transforma". ¿Debes **Validar** este mensaje (Verdad) o **Eliminarlo** (Falso)?',
         correctAnswer: true,
         points: 20
@@ -159,7 +159,7 @@ window.GAME_QUESTIONS = {
     {
         type: 'encounter',
         title: 'Reto 3: Viralizando la Alegría',
-        scenario: 'Te encuentras con niños cantando y alegres.',
+        scenario: '"Te encuentras con niños cantando y alegres."',
         prompt: 'La frase que se te presenta es: "El Espíritu Santo nos hace vivir alegres y con esperanza". ¿Esta frase **refleja la verdad del Evangelio** (Verdad) o es una **distracción** (Falso)?',
         correctAnswer: true,
         points: 20
@@ -167,7 +167,7 @@ window.GAME_QUESTIONS = {
     {
         type: 'encounter',
         title: 'Reto 4: Escucha a María',
-        scenario: 'Recibes un mensaje especial con la imagen de María.',
+        scenario: '"Recibes un mensaje especial con la imagen de María."',
         prompt: 'El mensaje de María dice: "Escucha a Dios en tu corazón". ¿**Aceptas** el consejo como una **conexión divina** (Verdad) o lo **descartas** (Falso)?',
         correctAnswer: true,
         points: 20
