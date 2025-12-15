@@ -58,6 +58,13 @@
     player_front_hand: 'src/Imagenes_L9/Elias_frente_mano_levantada.png',
     player_right: 'src/Imagenes_L9/Elias_perfil_derecho.png',
     player_left: 'src/Imagenes_L9/Elias_perfll_izquierdo.png', 
+
+    //Nuevos Espiritus
+    agua: 'src/Imagenes_L9/L9_agua.png',
+    fuego: 'src/Imagenes_L9/L9_Fuego.png',
+    nube_espiritu: 'src/Imagenes_L9/L9_Nube.png',
+    paloma: 'src/Imagenes_L9/L9_Paloma.png',
+    sello: 'src/Imagenes_L9/L9_Sello.png',
     
     // SPIRITS Y NUBES (Coleccionables)
     spirit: 'src/Imagenes_L9/Espiritu_fuego.png', // Spirit original
@@ -100,7 +107,7 @@
   ];
 
   // Array de imágenes disponibles para niveles 1 y 2
-  const SPIRIT_ASSET_KEYS = ['spirit', 'spiritt', 'nube'];
+  const SPIRIT_ASSET_KEYS = ['spirit', 'spiritt', 'nube', 'agua', 'fuego', 'paloma', 'sello', 'nube_espiritu'];
 
 
   const IMAGES = {};
@@ -720,12 +727,44 @@
   function openFinalChallenge() {
     finalModal.classList.remove('hidden');
     state.paused = true;
+    
+    // 🛑 Referencias a los nuevos elementos del modal final
+    const finalPostInput = document.getElementById('final-post-input');
+    const submitPostBtn = document.getElementById('submit-post-btn');
+    const userPostText = document.getElementById('user-post-text');
+    const postImage = document.getElementById('post-image');
+
+    // --- 1. CONFIGURACIÓN INICIAL ---
+    finalPostInput.value = '';
+    // Inicializar el texto de previsualización
+    userPostText.textContent = '¡Escribe tu mensaje para viralizar los Dones aquí!';
+    
+    // 🛑 Configurar la imagen del post (usando la imagen 'celular' que ya cargaste)
+    if (IMAGES['celular']) {
+        postImage.src = IMAGES['celular'].src;
+    } else {
+        // Fallback si la imagen no se carga
+        postImage.src = 'src/Imagenes_L9/nube.png';
+    }
+
+    // --- 2. LISTENER PARA LA PREVISUALIZACIÓN EN TIEMPO REAL ---
+    // Cada vez que el usuario teclea, el texto se actualiza en el post simulado
+    finalPostInput.oninput = () => {
+        // Si el campo está vacío, mostrar un mensaje por defecto
+        userPostText.textContent = finalPostInput.value.trim() || '¡Escribe tu mensaje para viralizar los Dones aquí!';
+    };
+
+    // --- 3. LISTENER DEL BOTÓN PUBLICAR ---
     submitPostBtn.onclick = () => {
-      const text = finalPost.value.trim();
-      if (text.length === 0) {
-        alert('Escribe tu post para completar el reto final.');
+      const text = finalPostInput.value.trim();
+      
+      // Validar un mínimo de texto para el "reto creativo"
+      if (text.length < 15) { 
+        alert('Tu post es muy corto. ¡Hazlo más viral! (Mínimo 15 caracteres).');
         return;
       }
+      
+      // Lógica de finalización
       state.score += 30; // +30 pts por "Reto creativo"
       finalModal.classList.add('hidden');
       state.paused = false;

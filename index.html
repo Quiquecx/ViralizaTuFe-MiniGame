@@ -47,7 +47,11 @@
             <div id="modal" class="modal hidden">
                 <div class="modal-content">
                     <h2 id="modal-title">Desafío</h2>
-                    <p id="modal-question"></p>
+                    
+                    <p id="modal-scenario" class="scenario-text"></p>
+                    
+                    <p id="modal-question"></p> 
+                    
                     <div id="modal-choices">
                         </div>
                     <div id="modal-feedback"></div>
@@ -76,11 +80,34 @@
             </div>
 
             <div id="final-modal" class="modal hidden">
-                <div class="modal-content">
-                    <h2 id="final-title">¡RETO FINAL! Post del Día</h2>
-                    <p>Elabora un post corto y creativo con una frase sobre los dones que has aprendido, y cómo puedes viralizar la fe hoy.</p>
-                    <textarea id="final-post" rows="4" placeholder="Mi post es..."></textarea>
-                    <button id="submit-post">¡Publicar!</button>
+                <div class="modal-content final-challenge-content">
+                    <h2>🎉 ¡Desafío Final: Publica tu Mensaje!</h2>
+                    <p>Has superado los niveles. Escribe un **mensaje corto** para viralizar el Evangelio en tus redes.</p>
+                    
+                    <div id="tweet-preview">
+                        <div class="tweet-header">
+                            <span class="username-tweet">@Elias_Evangeliza</span>
+                            <span class="tweet-time-muted">Hace un momento</span>
+                        </div>
+                        <p id="user-post-text" class="tweet-text-content">
+                            ¡Escribe aquí tu mensaje viral sobre los Dones!
+                        </p>
+                    </div>
+                    
+                    <textarea id="final-post-input" placeholder="Escribe aquí tu texto para el post... (Máx. 280 caracteres)"></textarea>
+                    <button id="submit-post-btn">Publicar Mensaje</button>
+                </div>
+            </div>
+            
+            <div id="publish-confirm-modal" class="modal hidden">
+                <div class="modal-content final-challenge-content">
+                    <h2>¡Publicación Exitosa!</h2>
+                    <p>Tu mensaje ha sido viralizado. ¡Misión cumplida!</p>
+
+                    <div id="published-post-preview" class="post-preview">
+                        </div>
+
+                    <button id="finish-game-btn">Terminar Misión</button>
                 </div>
             </div>
             

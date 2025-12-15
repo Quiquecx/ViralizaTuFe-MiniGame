@@ -275,6 +275,8 @@ button:active {
 }
 
 
+
+
 /* ======================================================================
    5. MODAL DE MATCHING (Nivel 2 - Dones)
    ====================================================================== */
@@ -326,14 +328,17 @@ button:active {
     align-items: center;
     justify-content: center;
     border-radius: 7px;
-    padding: 5px;
+    
+    padding: 2px; 
     box-sizing: border-box;
 }
 
 .card-front {
     background-color: var(--panel); 
     color: white;
+    
 }
+
 .don-card img {
     width: 100%;
     height: 100%;
@@ -491,5 +496,136 @@ button:active {
     .don-card {
         width: 100px; 
         height: 130px; 
+    }
+}
+/* ======================================================================
+   8. MODAL FINAL (POST)
+   ====================================================================== */
+
+   .final-challenge-content {
+    /* Reducimos el ancho máximo para dar más espacio en el contenedor modal */
+    max-width: 400px; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Estilo del textarea de entrada */
+#final-post-input {
+    width: 100%;
+    min-height: 70px; /* Ligera reducción de altura mínima */
+    margin: 10px 0 15px 0; /* Reducción de márgenes */
+    padding: 10px;
+    border: 2px solid var(--accent-2);
+    background: #1a202c; 
+    color: #edf2f7;
+    resize: vertical;
+    font-size: 0.9rem; /* Reducción de fuente */
+    border-radius: 8px;
+    font-family: var(--font-text);
+}
+
+
+/* Estilos de la publicación simulada (Post Preview) */
+#post-preview {
+    width: 100%;
+    max-width: 380px; /* Reducción del ancho máximo del post */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #1a202c; 
+    border-radius: 12px;
+    margin-bottom: 20px; /* Reducción de margen */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+    overflow: hidden; 
+    text-align: left;
+}
+
+.post-header {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px; /* Reducción de padding */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.profile-pic {
+    width: 32px; /* Reducción de tamaño */
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 8px;
+    object-fit: cover;
+    border: 2px solid var(--accent-2);
+}
+
+.username {
+    font-weight: 700;
+    font-size: 0.85rem; /* Reducción de fuente */
+    color: #fff;
+    font-family: var(--font-game);
+}
+
+.post-media {
+    width: 100%;
+    height: auto;
+    display: block;
+    max-height: 200px; /* Reducción de altura máxima */
+    object-fit: cover;
+    background-color: #000;
+}
+
+.post-caption {
+    /* CLAVE: Usamos display: block para que el caption ocupe su propia línea */
+    display: block;
+    padding: 8px 12px; /* Reducción de padding */
+    font-size: 0.85rem; /* Reducción de fuente */
+    line-height: 1.4;
+    overflow: hidden; /* Necesario si se usa float en los hijos */
+}
+
+#caption-username {
+    /* CLAVE DE FLUJO: Flota el nombre de usuario */
+    display: inline;
+    float: left; 
+    margin-right: 5px;
+}
+
+.post-text {
+    /* CLAVE DE FLUJO: Flota el texto del post para que siga al nombre */
+    display: inline; 
+    float: left;
+    font-weight: 400;
+    /* Ajuste para que el texto fluya y envuelva debajo */
+    width: auto; 
+}
+
+.post-time {
+    /* CLAVE DE FLUJO: Limpia los floats para que el tiempo siempre aparezca abajo */
+    clear: both;
+    display: block;
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 0.7rem;
+}
+
+.post-actions {
+    padding: 8px 12px; /* Reducción de padding */
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--muted);
+    font-size: 0.75rem; /* Reducción de fuente */
+    display: flex;
+    gap: 12px;
+}
+
+.post-actions span {
+    cursor: default;
+}
+
+/* Ajustes responsivos para el post */
+@media (max-width: 900px) {
+    #post-preview {
+        border-radius: 0; 
+        max-width: 100%;
+    }
+    .post-header, .post-caption, .post-actions {
+        padding-left: 10px;
+        padding-right: 10px;
     }
 }
