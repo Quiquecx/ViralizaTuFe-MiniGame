@@ -63,13 +63,15 @@
   // --- AUDIO Y RECURSOS
   const ASSETS = {
     // IMAGENES
-    fondo_n1: 'src/Imagenes_L9/libro_9_fondos-01.png',
-    fondo_n2: 'src/Imagenes_L9/libro_9_fondos-02.png',
-    fondo_n3: 'src/Imagenes_L9/libro_9_fondos-03.png',
+    fondo_n1: 'src/Imagenes_L9/fondo_n1.png',
+    fondo_n2: 'src/Imagenes_L9/fondo_n2.png',
+    fondo_n3: 'src/Imagenes_L9/fondo_n3.png',
     player_front: 'src/Imagenes_L9/Elias_frente.png',
     player_front_hand: 'src/Imagenes_L9/Elias_frente_mano_levantada.png',
     player_right: 'src/Imagenes_L9/Elias_perfil_derecho.png',
     player_left: 'src/Imagenes_L9/Elias_perfll_izquierdo.png', 
+    fondo_n1_act: 'src/Imagenes_L9/fondo_n1_act.png',
+    
 
     //Nuevos Espiritus
     agua: 'src/Imagenes_L9/L9_agua.png',
@@ -315,8 +317,7 @@
         {x:300,y:420,w:120,h:20},
         {x:520,y:360,w:120,h:20},
         {x:740,y:300,w:120,h:20},
-        {x:960,y:240,w:120,h:20},
-        {x:1100,y:300,w:120,h:20},
+        
       ],
       spirits: [
         {x:120,y:420,w:36,h:36, type: 'encounter', index: 0, asset: 'pregunta1'},
