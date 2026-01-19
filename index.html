@@ -6,16 +6,74 @@
     <title>Game Viraliza Tu Fe</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos para unificar la identidad visual */
+        .book-title-img {
+            max-width: 300px;
+            height: auto;
+            margin: 20px auto 10px;
+            display: block;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3));
+        }
+
+        .corner-cross {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            width: 50px;
+            height: auto;
+            opacity: 0.8;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .copyright-notice {
+            font-size: 10px;
+            color: #666;
+            text-align: center;
+            margin-top: 25px;
+            font-family: Arial, sans-serif;
+            text-transform: none; 
+        }
+
+        #menu {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        #menu h1 {
+            margin-top: 10px;
+            font-size: 24px; 
+        }
+    </style>
 </head>
 <body>
 
     <div id="game-container">
 
         <div id="menu" class="screen">
+            <img src="src/Imagenes_L9/Titulo_Escolar_Renovado-Primaria-Libro_06.png" 
+                 alt="Libro Catequesis" 
+                 class="book-title-img">
+
             <h1>Viraliza Tu Fe</h1>
             <p>¡Prepárate para la misión!</p>
-            <button id="start-game">Iniciar Juego</button>
-            <button id="how-to">Cómo Jugar</button>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+                <button id="start-game">Iniciar Juego</button>
+                <button id="how-to">Cómo Jugar</button>
+            </div>
+
+            <footer class="copyright-notice">
+                © Todos los derechos reservados Librerías y Ediciones la Casa del Catequista
+            </footer>
+
+            <img src="src/Imagenes_L9/logo corto de cruz.png" 
+                 alt="Cruz" 
+                 class="corner-cross">
         </div>
 
         <div id="howto-screen" class="screen hidden">
@@ -27,7 +85,6 @@
         </div>
         
         <div id="game-screen" class="hidden">
-
             <div id="hud">
                 <span id="level-label">Nivel 1: Stories</span>
                 <span id="score">Puntos: 0</span>
@@ -51,8 +108,7 @@
                     <h2 id="modal-title">Desafío</h2>
                     <p id="modal-scenario" class="scenario-text"></p>
                     <p id="modal-question"></p> 
-                    <div id="modal-choices">
-                    </div>
+                    <div id="modal-choices"></div>
                     <div id="modal-feedback"></div>
                     <div id="modal-footer">
                         <span id="modal-timer" class="hidden"></span>
@@ -66,8 +122,7 @@
                 <div class="modal-content">
                     <h2 id="match-title">Dilema - En Collab con el E.S.</h2>
                     <p id="match-prompt" class="match-prompt-text"></p>
-                    <div id="dilemma-cards">
-                    </div>
+                    <div id="dilemma-cards"></div>
                     <div id="match-results-box" class="match-results-box hidden">
                         <p id="match-feedback-message"></p>
                         <p id="match-correct-phrase"></p>
@@ -98,8 +153,7 @@
                 <div class="modal-content final-challenge-content">
                     <h2>¡Publicación Exitosa!</h2>
                     <p>Tu mensaje ha sido viralizado. ¡Misión cumplida!</p>
-                    <div id="published-post-preview" class="post-preview">
-                    </div>
+                    <div id="published-post-preview" class="post-preview"></div>
                     <button id="finish-game-btn">Terminar Misión</button>
                 </div>
             </div>
@@ -114,6 +168,13 @@
             </div>
         </div>
     </div>
+
+    <audio id="bg-music" src="src/sonidos/music-bg.mp3" loop></audio>
+    <audio id="jump-sound" src="src/sonidos/jump.mp3"></audio>
+    <audio id="collect-sound" src="src/sonidos/collect.mp3"></audio>
+    <audio id="correct-sound" src="src/sonidos/correct.mp3"></audio>
+    <audio id="wrong-sound" src="src/sonidos/wrong.mp3"></audio>
+    <audio id="level-win-sound" src="src/sonidos/win.mp3"></audio>
 
     <script src="src/questions.js"></script>
     <script src="src/game.js"></script>
