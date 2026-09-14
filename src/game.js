@@ -791,7 +791,7 @@ function showPublishedPost(postText) {
             <span class="username">Elias_Evangeliza</span>
         </div>
         
-        <img src="src/Imagenes_L9/L9_Paloma.png" alt="Imagen del Post" class="post-media">
+        <img src="src/Imagenes_L9/Elias_final.png" alt="Imagen del Post" class="post-media">
         
         <div class="post-caption">
             <p id="caption-username" class="username">Elias_Evangeliza</p>

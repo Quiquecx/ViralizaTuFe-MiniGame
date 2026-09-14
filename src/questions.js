@@ -95,7 +95,7 @@ window.GAME_QUESTIONS = {
           don: 'Ciencia',
           initial: 'CI',
           prompt: 'En clase de ciencias, el maestro pide investigar sobre el agua.',
-          correct_phrase: 'Investigar, comprender y explicar con tus propias palabras sobre la importancia de cuidar los recursos naturales que tenemos.',
+          correct_phrase: 'comprender y explicar con tus propias palabras sobre la importancia de cuidar los recursos naturales.',
           points: 20
       },
       // Spirit 3: Fortaleza
