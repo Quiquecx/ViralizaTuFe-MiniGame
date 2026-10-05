@@ -787,7 +787,7 @@ function showPublishedPost(postText) {
     // 3. Crear el HTML del post final (usa la paloma como imagen de post)
     publishedPostPreview.innerHTML = `
         <div class="post-header">
-            <img src="src/Imagenes_L9/Elias_perfil_derecho.png" alt="Usuario" class="profile-pic"> 
+            <img src="src/Imagenes_L9/Elias_final.png" alt="Usuario" class="profile-pic"> 
             <span class="username">Elias_Evangeliza</span>
         </div>
         
